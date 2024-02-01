@@ -7,6 +7,14 @@ RUN apk --no-cache add \
     && docker-php-ext-install pdo_mysql \
     && apk del $PHPIZE_DEPS
 
+# Install necessary packages including ext-sodium
+RUN apk --no-cache add \
+    bash \
+    git \
+    curl \
+    libsodium-dev \
+    && docker-php-ext-install sodium
+
 # Set the working directory
 WORKDIR /var/www/html
 
