@@ -6,19 +6,24 @@
 - User can register with a unique email.
 - User receives an email for onboarding after successful registration.
 - Rate limiting is applied to new user creation.
+- User provides a strong password during registration.
+- Registration form includes required fields (e.g., username, password).
+- System handles and rejects invalid email formats during registration.
 
 #### Expected Outcome:
 - User record is created in the database.
 - JWT token is generated and returned.
 - Onboarding email is sent.
 - Rate limiting applied to prevent abuse.
-
-#### Missing User Cases:
-- Attempting to register with an existing email.
+- Password is securely hashed and stored in the database.
+- Registration form validation ensures all required fields are provided.
+- System rejects registrations with invalid email formats.
 
 #### Expected Errors and Logs:
+- Error: with provided information, email, password strength, etc ..
 - Error: User with the provided email already exists.
 - Log: Registration attempt with duplicate email.
+- Log: rate limiting abuse.
 
 ### Step 2: User Login
 
@@ -26,18 +31,18 @@
 - User can log in with correct credentials.
 - Successful login triggers an email notification.
 - Rate limiting for failed login attempts.
+- Failling to log in with incorrect credentials.
 
 #### Expected Outcome:
 - JWT token is generated and returned on successful login.
 - Email notification sent on successful login.
 - Rate limiting applied for failed login attempts.
-
-#### Missing User Cases:
-- Attempting to log in with incorrect credentials.
+- Error is returned when failed login.
 
 #### Expected Errors and Logs:
 - Error: Invalid credentials.
-- Log: Failed login attempt.
+- Log: Failed login attempt and rate limiting.
+- Log: Successful login.
 
 ### Step 3: Update User Profile
 
