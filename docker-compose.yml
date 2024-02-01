@@ -3,9 +3,10 @@ version: '3'
 services:
   # PHP Service
   app:
-    image: php:8.2-fpm-alpine
+    build:
+      context: ./docker/app
+      dockerfile: Dockerfile
     container_name: laravel-app
-    working_dir: /var/www/html
     restart: always
     volumes:
       - .:/var/www/html
@@ -13,6 +14,8 @@ services:
       - PHP_FPM_LARAVEL=true
     networks:
       - laravel-net
+    depends_on:
+      - db
 
   # Nginx Service
   web:
@@ -54,7 +57,7 @@ services:
       - ./docker/redis:/data
     networks:
       - laravel-net
-      
+
   composer:
     image: composer
     container_name: laravel-composer
