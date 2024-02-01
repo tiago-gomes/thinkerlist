@@ -1,0 +1,116 @@
+### Extend Laravel Authentication for JWT
+
+#### Acceptance Cases:
+- User can register with a unique email.
+- User receives an email for onboarding after successful registration.
+- Rate limiting is applied to new user creation.
+
+#### Expected Outcome:
+- User record is created in the database.
+- JWT token is generated and returned.
+- Onboarding email is sent.
+- Rate limiting applied to prevent abuse.
+
+#### Missing User Cases:
+- Attempting to register with an existing email.
+
+#### Expected Errors and Logs:
+- Error: User with the provided email already exists.
+- Log: Registration attempt with duplicate email.
+
+### Step 2: User Login
+
+#### Acceptance Cases:
+- User can log in with correct credentials.
+- Successful login triggers an email notification.
+- Rate limiting for failed login attempts.
+
+#### Expected Outcome:
+- JWT token is generated and returned on successful login.
+- Email notification sent on successful login.
+- Rate limiting applied for failed login attempts.
+
+#### Missing User Cases:
+- Attempting to log in with incorrect credentials.
+
+#### Expected Errors and Logs:
+- Error: Invalid credentials.
+- Log: Failed login attempt.
+
+### Step 3: Update User Profile
+
+#### Acceptance Cases:
+- User can update profile fields (except email) after proper authentication.
+- Rate limiting for failed attempts to update the profile.
+
+#### Expected Outcome:
+- User profile is updated with the provided information.
+- Rate limiting applied for failed attempts.
+
+#### Missing User Cases:
+- Attempting to update the profile with incorrect authentication.
+- Attempting to update the email field.
+
+#### Expected Errors and Logs:
+- Error: Unauthorized request.
+- Error: Cannot update email field.
+- Log: Failed attempt to update profile.
+
+### Step 4: Show User Profile
+
+#### Acceptance Cases:
+- User can view their own profile.
+- JSON return is cached for efficiency.
+
+#### Expected Outcome:
+- JSON representation of the user's profile is returned.
+- The response is cached for subsequent requests.
+
+#### Missing User Cases:
+- Attempting to view another user's profile.
+
+#### Expected Errors and Logs:
+- Error: Unauthorized request to view profile.
+- Log: Attempt to view unauthorized profile.
+
+### Step 5: User Logout
+
+#### Acceptance Cases:
+- User can log out with proper authentication.
+- Email notification is sent on successful logout.
+
+#### Expected Outcome:
+- User is successfully logged out.
+- Email notification sent.
+- JWT token invalidated.
+
+#### Missing User Cases:
+- Attempting to log out without proper authentication.
+
+#### Expected Errors and Logs:
+- Error: Unauthorized logout attempt.
+- Log: Unauthorized logout attempt.
+
+### Step 6: Routing
+
+#### Acceptance Cases:
+- All routes (except public ones) must authenticate with JWT middleware.
+- Rate limiting for failed attempts.
+
+#### Expected Outcome:
+- Routes are protected by JWT authentication.
+- Rate limiting applied for unauthorized access attempts.
+
+#### Missing User Cases:
+- Accessing a protected route without a valid JWT token.
+
+#### Expected Errors and Logs:
+- Error: Unauthorized access to protected route.
+- Log: Unauthorized access attempt.
+
+### Summary:
+
+- The provided steps cover the extension of Laravel authentication for JWT, including registration, login, profile update, profile view, and logout.
+- Expected outcomes, errors, and logs are defined for each step to ensure proper functionality.
+- Rate limiting is implemented to enhance security and prevent abuse.
+- Careful consideration is given to potential missing user cases to handle edge scenarios effectively.
