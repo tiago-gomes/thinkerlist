@@ -5,7 +5,6 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use App\Exceptions\CustomExceptionHandler;
 
-
 class AppServiceProvider extends ServiceProvider
 {
     /**
