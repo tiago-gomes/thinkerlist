@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Tymon\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable
 {
@@ -42,4 +43,24 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
+
+    /**
+     * Undocumented function
+     *
+     * @return void
+     */
+    public function getJWTIdentifier(): array
+    {
+        return $this->getKey();
+    }
+
+    /**
+     * Get Jwt Custom Clains
+     *
+     * @return mixed
+     */
+    public function getJWTCustomClaims(): mixed
+    {
+        return [];
+    }
 }

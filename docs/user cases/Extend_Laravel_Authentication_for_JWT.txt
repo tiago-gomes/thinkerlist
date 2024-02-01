@@ -1,5 +1,7 @@
 ### Extend Laravel Authentication for JWT
 
+### Step 1: Register
+
 #### Acceptance Cases:
 - User can register with a unique email.
 - User receives an email for onboarding after successful registration.
