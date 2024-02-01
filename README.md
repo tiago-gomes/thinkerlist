@@ -60,3 +60,9 @@ docker-compose exec app chown -R www-data:www-data storage
 
 ## Generate new laravel key
 docker-compose exec app php artisan key:generate
+
+## run composer
+docker-compose run --rm composer <package>
+
+## Whats under the hood
+[Link to folder1 README](folder1/README.md)
