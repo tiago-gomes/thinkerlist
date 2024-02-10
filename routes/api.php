@@ -10,4 +10,5 @@ Route::post('/login', [AuthController::class, 'login']);
 // Routes that require authentication
 Route::middleware('auth:sanctum')->group(function () {
     // Additional authenticated routes go here
+    Route::post('/logout', [AuthController::class, 'logout']);
 });

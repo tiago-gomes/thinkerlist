@@ -8,6 +8,8 @@ use Illuminate\Foundation\Testing\WithFaker;
 use App\Enums\ErrorCode;
 use Faker\Factory as FakerFactory;
 use Mockery;
+use Laravel\Sanctum\Sanctum;
+
 
 class LoginControllerTest extends TestCase
 {
@@ -146,5 +148,22 @@ class LoginControllerTest extends TestCase
             ->assertJson([
                 'message' => 'The name field is required. (and 2 more errors)'
             ]);
+    }
+
+     public function testLogoutSuccessfully()
+    {
+        // Create a user and log them in using Sanctum
+        $user = User::factory()->create();
+        Sanctum::actingAs($user);
+
+        // Make a request to the logout endpoint
+        $response = $this->json('POST', '/api/logout');
+
+        // Assert the response
+        $response->assertStatus(ErrorCode::OK->value)
+            ->assertJson(['message' => 'Logout successful']);
+
+        // Assert that the user's token has been revoked
+        $this->assertCount(0, $user->tokens);
     }
 }

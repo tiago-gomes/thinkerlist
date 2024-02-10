@@ -74,4 +74,11 @@ class AuthController extends Controller
             ErrorCode::CREATED->value
         );
     }
+
+    public function logout()
+    {
+        // Revoke the current user's token
+        auth()->user()->tokens()->delete();
+        return response()->json(['message' => 'Logout successful'], ErrorCode::OK->value);
+    }
 }
