@@ -3,18 +3,18 @@
 ### Step 1: Register
 
 #### Acceptance Cases:
-- User can register with a unique email.
-- User receives an email for onboarding after successful registration.
+- User can register with a unique email. - done
+- User receives an email for onboarding after successful registration. 
 - Rate limiting is applied to new user creation.
-- User provides a strong password during registration.
-- Registration form includes required fields (e.g., username, password).
-- System handles and rejects invalid email formats during registration.
+- User provides a strong password during registration. - done
+- Registration form includes required fields (e.g., username, password). - done
+- System handles and rejects invalid email formats during registration. - done
 
 #### Expected Outcome:
-- User record is created in the database.
-- JWT token is generated and returned.
-- Onboarding email is sent.
-- Rate limiting applied to prevent abuse.
+- User record is created in the database. - done
+- JWT token is generated and returned. - done
+- Onboarding email is sent. - done
+- Rate limiting applied to prevent abuse. 
 - Password is securely hashed and stored in the database.
 - Registration form validation ensures all required fields are provided.
 - System rejects registrations with invalid email formats.
