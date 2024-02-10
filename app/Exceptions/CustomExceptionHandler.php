@@ -18,7 +18,8 @@ class CustomExceptionHandler extends ExceptionHandler
     public function render($request, \Throwable $exception)
     {
         // Customize the JSON response here
-        $status = method_exists($exception, 'getStatusCode') ? $exception->getStatusCode() : 500;
+        $status = method_exists($exception, 'getStatusCode') ? $exception->getStatusCode() : 0;
+        $status = $status == 0 ? $exception->status : 500;
 
         $data = [
             'status' => $status,
