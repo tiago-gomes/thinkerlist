@@ -20,7 +20,7 @@ class AuthController extends Controller
         // Attempt to authenticate the user
         $token = auth()->attempt($credentials);
         if(!$token) {
-            // Authentication success
+            // Authentication failed
             return response()->json(['message' => 'Invalid credentials'], ErrorCode::UNAUTHORIZED->value);
         }
 
