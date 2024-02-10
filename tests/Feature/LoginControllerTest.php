@@ -86,7 +86,10 @@ class LoginControllerTest extends TestCase
             'password' => $faker->password,
         ];
 
+        // Mock the register request
         $response = $this->json('POST', '/api/register', $userData);
+
+        // execute required assertations
         $response->assertStatus(ErrorCode::CREATED->value)
             ->assertJsonStructure([
                 'message',
@@ -109,7 +112,10 @@ class LoginControllerTest extends TestCase
             'password' => $faker->password,
         ];
 
+        // Mock the register request
         $response = $this->json('POST', '/api/register', $userData);
+
+        // execute required assertations
         $response->assertStatus(ErrorCode::CREATED->value)
             ->assertJsonStructure([
                 'message',
@@ -123,14 +129,20 @@ class LoginControllerTest extends TestCase
 
     public function testUserAlreadyExists()
     {
+        // Create a new user with factory pattern
         $existingUser = User::factory()->create();
+
+        // Define an array to store the existing user data
         $existingUserData = [
-            'name' => $this->faker->name,
-            'email' => $existingUser->email,
-            'password' => $this->faker->password,
+        'name' => $this->faker->name,
+        'email' => $existingUser->email,
+        'password' => $this->faker->password,
         ];
 
+        // Mock the register request
         $response = $this->json('POST', '/api/register', $existingUserData);
+
+        // execute required assertations
         $response->assertStatus(ErrorCode::BAD_REQUEST->value)
             ->assertJson([
                 'message' => 'User already exists.',
@@ -143,7 +155,10 @@ class LoginControllerTest extends TestCase
             // Missing 'name', 'email', 'password', etc.
         ];
 
+        // Mock the register request
         $response = $this->json('POST', '/api/register', $invalidData);
+
+        // execute required assertations
         $response->assertStatus(ErrorCode::UNPROCESSABLE_ENTITY->value)
             ->assertJson([
                 'message' => 'The name field is required. (and 2 more errors)'
