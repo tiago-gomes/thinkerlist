@@ -144,7 +144,6 @@ class LoginControllerTest extends TestCase
         $response = $this->json('POST', '/api/register', $invalidData);
         $response->assertStatus(ErrorCode::UNPROCESSABLE_ENTITY->value)
             ->assertJson([
-                'message' => 'The given data was invalid.',
                 'message' => 'The name field is required. (and 2 more errors)'
             ]);
     }
