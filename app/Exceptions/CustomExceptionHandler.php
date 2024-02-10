@@ -19,7 +19,11 @@ class CustomExceptionHandler extends ExceptionHandler
     {
         // Customize the JSON response here
         $status = method_exists($exception, 'getStatusCode') ? $exception->getStatusCode() : 0;
-        $status = $status == 0 ? $exception->status : 500;
+        if($status==0 || $status == '') {
+            $status = isset($exception->status) ?
+            $exception->status :
+            500;
+        }
 
         $data = [
             'status' => $status,

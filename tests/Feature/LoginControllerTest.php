@@ -5,10 +5,21 @@ use Tests\TestCase;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Foundation\Testing\WithFaker;
+use App\Enums\ErrorCode;
+use Faker\Factory as FakerFactory;
+use Mockery;
 
 class LoginControllerTest extends TestCase
 {
     use WithFaker, RefreshDatabase;
+
+    protected function tearDown(): void
+    {
+        parent::tearDown();
+
+        // Clean up mocked objects
+        Mockery::close();
+    }
 
     public function testSuccessfulLogin()
     {
@@ -61,5 +72,80 @@ class LoginControllerTest extends TestCase
 
         // Assert the response
         $response->assertStatus(422); // Missing credentials should return 422 Unprocessable Entity (validation error)
+    }
+
+    public function testUserRegistration()
+    {
+        $faker = FakerFactory::create();
+
+        $userData = [
+            'name' => $faker->name,
+            'email' => $faker->unique()->safeEmail,
+            'password' => $faker->password,
+        ];
+
+        $response = $this->json('POST', '/api/register', $userData);
+        $response->assertStatus(ErrorCode::CREATED->value)
+            ->assertJsonStructure([
+                'message',
+                'token',
+                'type',
+                'expires_in',
+            ]);
+
+        // Check if the user is stored in the database
+        $this->assertDatabaseHas('users', ['email' => $userData['email']]);
+    }
+
+     public function testSuccessfulUserRegistration()
+    {
+        $faker = FakerFactory::create();
+
+        $userData = [
+            'name' => $faker->name,
+            'email' => $faker->unique()->safeEmail,
+            'password' => $faker->password,
+        ];
+
+        $response = $this->json('POST', '/api/register', $userData);
+        $response->assertStatus(ErrorCode::CREATED->value)
+            ->assertJsonStructure([
+                'message',
+                'token',
+                'type',
+                'expires_in',
+            ]);
+
+        $this->assertDatabaseHas('users', ['email' => $userData['email']]);
+    }
+
+    public function testUserAlreadyExists()
+    {
+        $existingUser = User::factory()->create();
+        $existingUserData = [
+            'name' => $this->faker->name,
+            'email' => $existingUser->email,
+            'password' => $this->faker->password,
+        ];
+
+        $response = $this->json('POST', '/api/register', $existingUserData);
+        $response->assertStatus(ErrorCode::BAD_REQUEST->value)
+            ->assertJson([
+                'message' => 'User already exists.',
+            ]);
+    }
+
+    public function testValidationErrors()
+    {
+        $invalidData = [
+            // Missing 'name', 'email', 'password', etc.
+        ];
+
+        $response = $this->json('POST', '/api/register', $invalidData);
+        $response->assertStatus(ErrorCode::UNPROCESSABLE_ENTITY->value)
+            ->assertJson([
+                'message' => 'The given data was invalid.',
+                'message' => 'The name field is required. (and 2 more errors)'
+            ]);
     }
 }
