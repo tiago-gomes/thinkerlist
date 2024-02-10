@@ -11,7 +11,7 @@ use Mockery;
 use Laravel\Sanctum\Sanctum;
 
 
-class LoginControllerTest extends TestCase
+class AuthControllerTest extends TestCase
 {
     use WithFaker, RefreshDatabase;
 
