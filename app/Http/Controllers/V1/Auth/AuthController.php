@@ -48,8 +48,8 @@ class AuthController extends Controller
             return response()->json(['message' => 'User already exists.'], ErrorCode::BAD_REQUEST->value);
         }
 
-        $user = User::create($data);
         // Save the user into the database
+        $user = User::create($data);
         if (!$user) {
             return response()->json(['message' => 'User registration failed.'], ErrorCode::BAD_REQUEST->value);
         }
