@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Enums\ErrorCode;
 use App\Http\Requests\RegisterRequest;
 use App\Models\User;
+use Exception;
 
 class AuthController extends Controller
 {
@@ -77,8 +78,12 @@ class AuthController extends Controller
 
     public function logout()
     {
-        // Revoke the current user's token
-        auth()->user()->tokens()->delete();
-        return response()->json(['message' => 'Logout successful'], ErrorCode::OK->value);
+        try {
+            // Revoke the current user's token
+            auth()->user()->tokens()->delete();
+            return response()->json(['message' => 'Logout successful'], ErrorCode::OK->value);
+        } catch(Exception $e) {
+            return response()->json(['message' => 'Unable to complete logout. Please try again later.'], ErrorCode::BAD_REQUEST->value);
+        }
     }
 }

@@ -9,6 +9,7 @@ use App\Enums\ErrorCode;
 use Faker\Factory as FakerFactory;
 use Mockery;
 use Laravel\Sanctum\Sanctum;
+use \Illuminate\Database\QueryException;
 
 
 class AuthControllerTest extends TestCase
@@ -165,7 +166,7 @@ class AuthControllerTest extends TestCase
             ]);
     }
 
-     public function testLogoutSuccessfully()
+    public function testLogoutSuccessfully()
     {
         // Create a user and log them in using Sanctum
         $user = User::factory()->create();
@@ -180,5 +181,15 @@ class AuthControllerTest extends TestCase
 
         // Assert that the user's token has been revoked
         $this->assertCount(0, $user->tokens);
+    }
+
+    public function testLogoutWithoutAuthentication()
+    {
+        // Make a request to the logout endpoint without authentication
+        $response = $this->json('POST', '/api/logout');
+
+        // Assert the response
+        $response->assertStatus(ErrorCode::UNAUTHORIZED->value)
+            ->assertJson(['message' => 'Unauthenticated.']);
     }
 }
