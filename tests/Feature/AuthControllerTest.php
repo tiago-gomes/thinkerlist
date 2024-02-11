@@ -9,7 +9,7 @@ use App\Enums\ErrorCode;
 use Faker\Factory as FakerFactory;
 use Mockery;
 use Laravel\Sanctum\Sanctum;
-use \Illuminate\Database\QueryException;
+use App\Enums\Role;
 
 
 class AuthControllerTest extends TestCase
@@ -126,6 +126,7 @@ class AuthControllerTest extends TestCase
             ]);
 
         $this->assertDatabaseHas('users', ['email' => $userData['email']]);
+        $this->assertDatabaseHas('users', ['role' => Role::MANAGER->value]);
     }
 
     public function testUserAlreadyExists()
