@@ -15,6 +15,9 @@ RUN apk --no-cache add \
     libsodium-dev \
     && docker-php-ext-install sodium
 
+# Enable the PHP JIT compilation
+RUN docker-php-ext-enable opcache
+
 # Set the working directory
 WORKDIR /var/www/html
 
