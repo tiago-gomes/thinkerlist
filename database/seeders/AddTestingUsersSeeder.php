@@ -2,12 +2,11 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
 use App\Enums\Role;
 
-class AddTestingUsers extends Seeder
+class AddTestingUsersSeeder extends Seeder
 {
     /**
      * Run the database seeds.
@@ -23,6 +22,6 @@ class AddTestingUsers extends Seeder
         ]);
 
         // Create and insert a specific number of testing manager users
-        User::factory()->count(10)->create();
+        User::factory()->count(1)->create();
     }
 }

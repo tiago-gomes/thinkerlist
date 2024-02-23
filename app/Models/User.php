@@ -104,4 +104,25 @@ class User extends Authenticatable
     {
         return [];
     }
+
+    /**
+     * Get the schedule rules associated with the user.
+     */
+    public function scheduleRules()
+    {
+        return $this->hasMany(ScheduleRule::class);
+    }
+
+    /**
+     * Get the customers associated with the user.
+     */
+    public function customers()
+    {
+        return $this->hasMany(Customer::class);
+    }
+
+    public function bookingss()
+    {
+        return $this->hasMany(Booking::class);
+    }
 }

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\V1\Auth\AuthController;
+use App\Http\Controllers\V1\Schedule\ScheduleRuleController;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
@@ -9,6 +10,10 @@ Route::post('/register', [AuthController::class, 'register'])->name('auth.regist
 
 // Routes that require authentication
 Route::middleware('auth:sanctum')->group(function () {
-    // Additional authenticated routes go here
+
+    // schedule rules
+    Route::get('/schedule-rules', [ScheduleRuleController::class, 'index'])->name('schedule.rules.index');
+
+    // authentication
     Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');
 });

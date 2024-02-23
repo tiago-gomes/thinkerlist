@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -13,7 +12,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         if (app()->environment('local')) {
-            $this->call(AddTestingUsers::class);
+            $this->call(AddTestingUsersSeeder::class);
+            $this->call(AddTestingScheduleRulesSeeder::class);
         }
     }
 }
