@@ -5,8 +5,11 @@ use App\Http\Requests\LoginRequest;
 use App\Http\Controllers\Controller;
 use App\Enums\ErrorCode;
 use App\Http\Requests\RegisterRequest;
+use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Exception;
+use Carbon\Carbon;
+
 
 class AuthController extends Controller
 {
@@ -21,17 +24,20 @@ class AuthController extends Controller
         $credentials = $request->validated();
 
         // Attempt to authenticate the user
-        $auth = auth()->attempt($credentials);
+        $auth = Auth::guard('web')->attempt($credentials);
         if(!$auth) {
             // Authentication failed
             return response()->json(['message' => 'Invalid credentials'], ErrorCode::UNAUTHORIZED->value);
         }
 
+        // generate sacntum token
+        $token = $request->user()->createToken('token', ['*'], now()->addMinutes(60));
+
         // Return a JSON response with the token
         return response()->json([
-                'token' => auth()->user()->accessToken,
+                'token' => $token->plainTextToken,
                 'type' => 'bearer',
-                'expires_in' => auth()->user()->expires_in,
+                'expires_in' => $token->accessToken->expires_at,
             ],
             ErrorCode::OK->value
         );
@@ -56,7 +62,7 @@ class AuthController extends Controller
         }
 
         // attempt to authenticate
-        $auth = auth()->attempt([
+        $auth = Auth::guard('web')->attempt([
             "email" => $data["email"],
             "password" => $data["password"]
         ]);
@@ -65,12 +71,15 @@ class AuthController extends Controller
             return response()->json(['message' => 'Invalid credentials'], ErrorCode::UNAUTHORIZED->value);
         }
 
+        // generate sacntum token
+        $token = $request->user()->createToken('token', ['*'], now()->addMinutes(60));
+
         // Return success response
         return response()->json([
                 'message' => 'User created successfully!',
-                'token' => auth()->user()->accessToken,
+                'token' => $token->accessToken->token,
                 'type' => 'bearer',
-                'expires_in' => auth()->user()->expires_in,
+                'expires_in' => $token->accessToken->expires_at,
             ],
             ErrorCode::CREATED->value
         );

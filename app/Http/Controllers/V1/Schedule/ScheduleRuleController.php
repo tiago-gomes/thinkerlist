@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers\V1\Schedule;
 
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\ScheduleRule;
 use App\Http\Requests\CreateScheduleRuleRequest;
 use App\Http\Requests\SearchScheduleRuleRequest;
 use App\Services\ScheduleRuleService;
-use App\Models\User;
+USE App\Enums\ErrorCode;
 
 class ScheduleRuleController extends Controller
 {
@@ -61,6 +60,22 @@ class ScheduleRuleController extends Controller
         // Paginate the results
         $scheduleRules = $query->paginate($perPage, ['title','description', 'is_recurring', 'is_custom'], 'page', $page);
 
-        return response()->json($scheduleRules);
+        return response()->json($scheduleRules, ErrorCode::OK->value);
+    }
+
+    /**
+     * Create a new Schedule Rule
+     *
+     * @param CreateScheduleRuleRequest $request
+     * @return void
+     */
+    public function store(CreateScheduleRuleRequest $request)
+    {
+        $params = $request->validated();
+        $user = $request?->user();
+
+        $scheduleRules = $user->scheduleRules()->create($params);
+
+        return response()->json($scheduleRules, ErrorCode::CREATED->value);
     }
 }

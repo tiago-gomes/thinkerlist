@@ -13,6 +13,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // schedule rules
     Route::get('/schedule-rules', [ScheduleRuleController::class, 'index'])->name('schedule.rules.index');
+    Route::post('/schedule-rules', [ScheduleRuleController::class, 'store'])->name('schedule.rules.store');
 
     // authentication
     Route::post('/logout', [AuthController::class, 'logout'])->name('auth.logout');

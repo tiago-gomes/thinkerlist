@@ -42,7 +42,7 @@ class AuthControllerTest extends TestCase
         ];
 
         // Mock the login request
-        $response = $this->json('POST', '/api/login', $data);
+        $response = $this->json('post','/api/login', $data);
 
         // Assert the response
         $response->assertStatus(200); // Adjust the expected status code

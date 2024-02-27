@@ -255,7 +255,7 @@ class ScheduleRuleServiceTest extends TestCase
 
         $this->assertIsArray($result);
         $this->assertNotEmpty($result);
-        $this->assertCount(2, $result); // Only entries for Monday, Wednesday, and Friday
+        $this->assertCount(4, $result); // Only entries for Monday, Wednesday, and Friday
     }
 
     /**

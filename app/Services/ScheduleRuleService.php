@@ -178,7 +178,8 @@ class ScheduleRuleService
      */
     private function shouldIncludeDate(Carbon $date, array $params): bool
     {
-        if (empty($params['recurring_has_weekdays'])) {
+        if (!isset($params['recurring_has_weekdays'])) {
+            $params['recurring_has_weekdays'] = 1;
             $params['recurring_has_weekdays'] = [
                 "monday",
                 "tuesday",
@@ -188,7 +189,7 @@ class ScheduleRuleService
             ];
         }
 
-        if (empty($params['recurring_ignore_weekends'])) {
+        if (!isset($params['recurring_ignore_weekends'])) {
             $params['recurring_ignore_weekends'] = 1;
         }
 

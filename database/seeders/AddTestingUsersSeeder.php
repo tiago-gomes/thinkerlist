@@ -17,7 +17,7 @@ class AddTestingUsersSeeder extends Seeder
         User::factory()->create([
             'name' => 'Admin',
             'email' => 'admin@admin.com',
-            'password' => '12345',
+            'password' => '123456',
             'role' => Role::ADMIN->value
         ]);
 

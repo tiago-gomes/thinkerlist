@@ -18,21 +18,29 @@ return new class extends Migration
                 $table->text('description');
                 $table->unsignedBigInteger('user_id'); // Assuming you want to associate with users (managers)
                 $table->tinyInteger('recurring_type');
-                $table->integer('recurring_type_duration');
-                $table->time('recurring_start_time');
-                $table->time('recurring_end_time');
+
+                $table->boolean('is_recurring')->default(0);
+                $table->integer('recurring_type_duration')->default(1);
+
+                $table->date('recurring_duration_start_date')->default(now());
+                $table->time('recurring_start_time')->default("09:00");
+                $table->time('recurring_end_time')->default('17:00');
+
+                $table->integer('recurring_duration_minutes')->default(15);
+                $table->integer('recurring_interval_minutes')->default(5);
+
+                $table->boolean('recurring_has_lunch_time')->default(0);
                 $table->time('recurring_start_lunch_time')->nullable();
                 $table->time('recurring_end_lunch_time')->nullable();
-                $table->boolean('recurring_ignore_weekends')->default(true);
-                $table->integer('recurring_duration_minutes')->default(25);
-                $table->integer('recurring_interval_minutes')->default(5);
-                $table->boolean('recurring_has_lunch_time')->default(false);
-                $table->boolean('recurring_has_weekdays')->default(false);
-                $table->json('recurring_weekdays');
-                $table->date('recurring_duration_start_date')->nullable();
+
+                $table->boolean('recurring_has_weekdays')->default(0);
+                $table->json('recurring_weekdays')->default(json_encode(["monday","tuesday","wednesday","thursday","friday"]));
+
+                $table->boolean('recurring_ignore_weekends')->default(1);
+
+                $table->boolean('is_custom')->default(0);
                 $table->json('custom_date_times')->nullable();
-                $table->boolean('is_recurring')->default(false);
-                $table->boolean('is_custom')->default(false);
+
                 $table->timestamps();
 
                 // Foreign key constraint to link manager_id with the users table
