@@ -4,8 +4,11 @@ FROM php:8.2-fpm-alpine
 # Install required dependencies and extension
 RUN apk --no-cache add \
     $PHPIZE_DEPS \
+    && apk add --no-cache autoconf g++ make \
+    && pecl install redis \
+    && docker-php-ext-enable redis \
     && docker-php-ext-install pdo_mysql \
-    && apk del $PHPIZE_DEPS
+    && apk del $PHPIZE_DEPS autoconf g++ make
 
 # Install necessary packages including ext-sodium
 RUN apk --no-cache add \

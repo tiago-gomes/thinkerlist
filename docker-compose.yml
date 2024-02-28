@@ -16,6 +16,7 @@ services:
       - laravel-net
     depends_on:
       - db
+      - redis
 
   # Nginx Service
   web:
@@ -54,10 +55,14 @@ services:
     image: redis:alpine
     container_name: laravel-redis
     restart: always
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     volumes:
-      - ./docker/redis:/data
+      - ./docker/redis/config/redis.conf:/usr/local/etc/redis/redis.conf
+      - ./docker/redis/data:/data
     networks:
       - laravel-net
+    ports:
+      - "6379:6379"
 
   composer:
     image: composer

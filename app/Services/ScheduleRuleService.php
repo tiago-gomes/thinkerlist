@@ -100,7 +100,7 @@ class ScheduleRuleService
         $now = Carbon::now();
 
         if ($end->isBefore($now)) {
-            Throw new InvalidArgumentException('The end date is before now');
+            throw new InvalidArgumentException('The end date is before now');
         }
 
         $dates = [];

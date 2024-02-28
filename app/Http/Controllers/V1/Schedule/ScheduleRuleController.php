@@ -3,19 +3,18 @@
 namespace App\Http\Controllers\V1\Schedule;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\CreateBookingJob;
 use App\Models\ScheduleRule;
 use App\Http\Requests\CreateScheduleRuleRequest;
 use App\Http\Requests\SearchScheduleRuleRequest;
-use App\Services\ScheduleRuleService;
-USE App\Enums\ErrorCode;
+use App\Enums\ErrorCode;
 
 class ScheduleRuleController extends Controller
 {
-    private scheduleRuleService $scheduleRuleService;
 
-    public function __construct(ScheduleRuleService $scheduleRuleService)
+    public function __construct()
     {
-        $this->scheduleRuleService = $scheduleRuleService;
+        //
     }
 
     /**
@@ -72,10 +71,14 @@ class ScheduleRuleController extends Controller
     public function store(CreateScheduleRuleRequest $request)
     {
         $params = $request->validated();
-        $user = $request?->user();
+        $user = $request->user();
 
-        $scheduleRules = $user->scheduleRules()->create($params);
+        // create new schedule rule
+        $scheduleRule = $user->scheduleRules()->create($params);
 
-        return response()->json($scheduleRules, ErrorCode::CREATED->value);
+        // execute in background
+        dispatch(new CreateBookingJob($scheduleRule, $params));
+
+        return response()->json($scheduleRule, ErrorCode::CREATED->value);
     }
 }
