@@ -1,6 +1,9 @@
 # Dockerfile
 FROM php:8.2-fpm-alpine
 
+# Install runit
+RUN apk add --no-cache runit
+
 # Install required dependencies and extension
 RUN apk --no-cache add \
     $PHPIZE_DEPS \
@@ -20,6 +23,9 @@ RUN apk --no-cache add \
 
 # Enable the PHP JIT compilation
 RUN docker-php-ext-enable opcache
+
+# Add runit service directory
+ADD ./runit /etc/service
 
 # Set the working directory
 WORKDIR /var/www/html
