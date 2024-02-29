@@ -9,6 +9,7 @@ use App\Models\ScheduleRule;
 use App\Enums\ErrorCode;
 use Laravel\Sanctum\Sanctum;
 use App\Jobs\CreateBookingJob;
+use InvalidArgumentException;
 use Queue;
 
 class ScheduleRulesTest extends TestCase
@@ -182,6 +183,40 @@ class ScheduleRulesTest extends TestCase
 
         // Assert that the CreateBookingJob was added to the queue
         Queue::assertPushed(CreateBookingJob::class);
+    }
+
+    public function testCreateScheduleRuleDuplicateTitleException()
+    {
+        // generate a user
+        $user = User::factory()->create();
+
+        // generate a schedule rule
+        ScheduleRule::factory()->create([
+            "user_id" => $user->id,
+            "title" => "duplicate title"
+        ]);
+
+        // Act as the authenticated user with Sanctum
+        Sanctum::actingAs($user);
+
+        $params = [
+            'title' => 'duplicate title',
+            'description' => 'duplicate description',
+            'is_recurring' => true,
+            'recurring_type' => 1, // Daily
+            'recurring_duration_start_date' => '2024-03-01',
+            'recurring_type_duration' => 5,
+            'recurring_start_time' => '09:00',
+            'recurring_end_time' => '17:00',
+            'recurring_duration_minutes' => 60,
+            'recurring_interval_minutes' => 15,
+            'recurring_ignore_weekends' => true,
+            'is_custom' => false,
+        ];
+
+        // Make a POST request to the store action with the data
+        $response = $this->json('POST', '/api/schedule-rules', $params);
+        $response->assertStatus(ErrorCode::UNPROCESSABLE_ENTITY->value);
     }
 
     public function testCreateScheduleRuleDailyWithWeekends()

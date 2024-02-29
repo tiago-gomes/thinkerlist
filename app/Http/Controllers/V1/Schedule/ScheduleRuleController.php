@@ -8,6 +8,7 @@ use App\Models\ScheduleRule;
 use App\Http\Requests\CreateScheduleRuleRequest;
 use App\Http\Requests\SearchScheduleRuleRequest;
 use App\Enums\ErrorCode;
+use InvalidArgumentException;
 
 class ScheduleRuleController extends Controller
 {
@@ -72,6 +73,12 @@ class ScheduleRuleController extends Controller
     {
         $params = $request->validated();
         $user = $request->user();
+
+        // check if schedule rule title is a duplicate
+        $duplicate = ScheduleRule::where('title', $params['title'])->first();
+        if ($duplicate) {
+            throw new InvalidArgumentException("A schedule rule with this title already exists.", ErrorCode::UNPROCESSABLE_ENTITY->value);
+        }
 
         // create new schedule rule
         $scheduleRule = $user->scheduleRules()->create($params);
