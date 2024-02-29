@@ -64,15 +64,6 @@ services:
     ports:
       - "6379:6379"
 
-  composer:
-    image: composer
-    container_name: laravel-composer
-    working_dir: /var/www/html
-    volumes:
-      - .:/var/www/html
-    networks:
-      - laravel-net
-
 networks:
   laravel-net:
     driver: bridge
