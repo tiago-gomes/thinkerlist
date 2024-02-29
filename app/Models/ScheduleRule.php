@@ -12,6 +12,7 @@ class ScheduleRule extends Model
     protected $fillable = [
         'title',
         'description',
+        'status',
         'user_id',
         'recurring_type',
         'recurring_type_duration',
