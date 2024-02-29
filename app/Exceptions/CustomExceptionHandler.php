@@ -5,10 +5,10 @@ namespace App\Exceptions;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\JsonResponse;
 use App\Enums\ErrorCode;
-use BadMethodCallException;
 use Throwable;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
+use Illuminate\Auth\AuthenticationException;
 
 class CustomExceptionHandler extends ExceptionHandler
 {
@@ -23,41 +23,45 @@ class CustomExceptionHandler extends ExceptionHandler
 
     public function render($request, Throwable $exception)
     {
-
         // Customize the JSON response here
-        $status = method_exists($exception, 'getStatusCode') ? $exception->getStatusCode() : 0;
+        $status = $this->getStatusCode($exception);
 
-        if ($status == 0 || $status == '') {
-            $status = isset($exception->status) ? $exception->status : 0;
-        }
+        $customMessage = $this->getCustomMessage($exception);
 
-        if($status == 0 && $exception->getMessage() == 'Unauthenticated.') {
-            $status = ErrorCode::UNAUTHORIZED->value;
-        }
-
-        if($status == 0 && $exception->getMessage() == 'This action is unauthorized.') {
-            $status = ErrorCode::UNAUTHORIZED->value;
-        }
-
-        if ($status == 0 && $exception instanceof ValidationException){
-            $status = ErrorCode::UNPROCESSABLE_ENTITY->value;
-        }
-
-        if ($status == 0 && $exception instanceof InvalidArgumentException){
-            $status = ErrorCode::UNPROCESSABLE_ENTITY->value;
-        }
-
-        if ($status == 0 && $exception instanceof BadMethodCallException){
-            $status = ErrorCode::UNPROCESSABLE_ENTITY->value;
-        }
-
-        $customMessageMethod = 'getCustomMessage';
         $data = [
             'status' => $status,
-            'message' => method_exists($exception, $customMessageMethod) ? $exception->$customMessageMethod() : $exception->getMessage(),
+            'message' => $customMessage,
             'data' => null,
         ];
 
         return new JsonResponse($data, $status);
+    }
+
+    private function getStatusCode(Throwable $exception): int
+    {
+        $status = method_exists($exception, 'getStatusCode') ? $exception->getStatusCode() : 0;
+
+        if ($status == 0 && $exception instanceof ValidationException) {
+            $status = ErrorCode::UNPROCESSABLE_ENTITY->value;
+        } elseif ($status == 0 && $exception instanceof InvalidArgumentException) {
+            $status = ErrorCode::UNPROCESSABLE_ENTITY->value;
+        } elseif($status == 0 && $exception instanceof AuthenticationException) {
+            $status = ErrorCode::UNAUTHORIZED->value;
+        } elseif ($status == 0) {
+            $status = ErrorCode::INTERNAL_SERVER_ERROR->value;
+        }
+
+        return $status;
+    }
+
+    private function getCustomMessage(Throwable $exception): string
+    {
+        $customMessage = method_exists($exception, 'getCustomMessage') ? $exception->getCustomMessage() : '';
+
+        if (empty($customMessage)) {
+            $customMessage = $exception->getMessage();
+        }
+
+        return $customMessage;
     }
 }
