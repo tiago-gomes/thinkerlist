@@ -7,9 +7,9 @@ use Tests\TestCase;
 use App\Models\User;
 use App\Models\ScheduleRule;
 use App\Enums\ErrorCode;
-use App\Enums\RecurringType;
-use Exception;
 use Laravel\Sanctum\Sanctum;
+use App\Jobs\CreateBookingJob;
+use Queue;
 
 class ScheduleRulesTest extends TestCase
 {
@@ -134,6 +134,8 @@ class ScheduleRulesTest extends TestCase
 
     public function testCreateScheduleRuleDaily()
     {
+        Queue::fake();
+
         // generate a user
         $user = User::factory()->create();
 
@@ -171,5 +173,66 @@ class ScheduleRulesTest extends TestCase
             'recurring_interval_minutes' => 15,
             'recurring_ignore_weekends' => true,
         ]);
+
+        // Assert that a schedule rule with the given title and user_id exists in the database
+        $this->assertDatabaseHas('schedule_rules', [
+            'title' => 'test',
+            'user_id' => $user->id,
+        ]);
+
+        // Assert that the CreateBookingJob was added to the queue
+        Queue::assertPushed(CreateBookingJob::class);
+    }
+
+    public function testCreateScheduleRuleDailyWithWeekends()
+    {
+        Queue::fake();
+
+        // generate a user
+        $user = User::factory()->create();
+
+        // Act as the authenticated user with Sanctum
+        Sanctum::actingAs($user);
+
+        $params = [
+            'title' => 'test with weekends',
+            'description' => 'test',
+            'is_recurring' => true,
+            'recurring_type' => 1, // Daily
+            'recurring_duration_start_date' => '2024-03-01',
+            'recurring_type_duration' => 5,
+            'recurring_start_time' => '09:00',
+            'recurring_end_time' => '17:00',
+            'recurring_duration_minutes' => 60,
+            'recurring_interval_minutes' => 15,
+            'recurring_ignore_weekends' => false,
+            'is_custom' => false,
+        ];
+
+        // Make a POST request to the store action with the data
+        $response = $this->json('POST', '/api/schedule-rules', $params);
+        $response->assertStatus(ErrorCode::CREATED->value);
+
+        // Assert that the response contains the recurring schedule rule
+        $response->assertJsonFragment([
+            'is_recurring' => true,
+            'recurring_type' => 1, // Daily
+            'recurring_duration_start_date' => '2024-03-01',
+            'recurring_type_duration' => 5,
+            'recurring_start_time' => '09:00',
+            'recurring_end_time' => '17:00',
+            'recurring_duration_minutes' => 60,
+            'recurring_interval_minutes' => 15,
+            'recurring_ignore_weekends' => false,
+        ]);
+
+        // Assert that a schedule rule with the given title and user_id exists in the database
+        $this->assertDatabaseHas('schedule_rules', [
+            'title' => 'test with weekends',
+            'user_id' => $user->id,
+        ]);
+
+        // Assert that the CreateBookingJob was added to the queue
+        Queue::assertPushed(CreateBookingJob::class);
     }
 }
