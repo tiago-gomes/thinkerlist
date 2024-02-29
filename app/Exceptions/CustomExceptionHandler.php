@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
@@ -7,6 +8,7 @@ use App\Enums\ErrorCode;
 use Throwable;
 use Illuminate\Validation\ValidationException;
 use InvalidArgumentException;
+use Illuminate\Auth\AuthenticationException;
 
 class CustomExceptionHandler extends ExceptionHandler
 {
@@ -43,6 +45,8 @@ class CustomExceptionHandler extends ExceptionHandler
             $status = ErrorCode::UNPROCESSABLE_ENTITY->value;
         } elseif ($status == 0 && $exception instanceof InvalidArgumentException) {
             $status = ErrorCode::UNPROCESSABLE_ENTITY->value;
+        } elseif($status == 0 && $exception instanceof AuthenticationException) {
+            $status = ErrorCode::UNAUTHORIZED->value;
         } elseif ($status == 0) {
             $status = ErrorCode::INTERNAL_SERVER_ERROR->value;
         }
