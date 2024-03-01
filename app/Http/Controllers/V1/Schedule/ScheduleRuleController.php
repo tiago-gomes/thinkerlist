@@ -84,7 +84,8 @@ class ScheduleRuleController extends Controller
         $scheduleRule = $user->scheduleRules()->create($params);
 
         // execute in background
-        dispatch(new CreateBookingJob($scheduleRule, $params));
+        dispatch(new CreateBookingJob($scheduleRule, $params))
+            ->onQueue('recursive-queue');
 
         return response()->json($scheduleRule, ErrorCode::CREATED->value);
     }
