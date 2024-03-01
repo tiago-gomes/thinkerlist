@@ -1,8 +1,8 @@
 # Dockerfile
 FROM php:8.2-fpm-alpine
 
-# Install runit
-RUN apk add --no-cache runit
+# install supervisor
+RUN apk add supervisor
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
@@ -27,9 +27,6 @@ RUN apk --no-cache add \
 # Enable the PHP JIT compilation
 RUN docker-php-ext-enable opcache
 
-# Add runit service directory
-ADD ./runit /etc/service
-
 # Set the working directory
 WORKDIR /var/www/html
 
@@ -39,7 +36,19 @@ COPY . /var/www/html
 # Set proper permissions (adjust if needed)
 RUN chown -R www-data:www-data /var/www/html
 
+#
+RUN mkdir -p /var/run/php
+
+RUN mkdir -p /var/log/php-fpm
+
+# Supervisor configuration
+COPY ./supervisor/supervisord.conf /etc/supervisord.conf
+
+# Add process workers
+COPY ./supervisor/worker /etc/supervisor.d/
+
 # Expose port 9000 for PHP-FPM
 EXPOSE 9000
 
-CMD ["php-fpm"]
+# Start supervisor in the foreground
+CMD ["supervisord", "-n"]
