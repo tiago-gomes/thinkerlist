@@ -36,9 +36,8 @@ COPY . /var/www/html
 # Set proper permissions (adjust if needed)
 RUN chown -R www-data:www-data /var/www/html
 
-#
+# creating required directories
 RUN mkdir -p /var/run/php
-
 RUN mkdir -p /var/log/php-fpm
 
 # Supervisor configuration
