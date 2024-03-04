@@ -270,4 +270,47 @@ class ScheduleRulesTest extends TestCase
         // Assert that the CreateBookingJob was added to the queue
         Queue::assertPushed(CreateBookingJob::class);
     }
+
+    public function testCreateCustomScheduleRule()
+    {
+        Queue::fake();
+
+        // generate a user
+        $user = User::factory()->create();
+
+        // Act as the authenticated user with Sanctum
+        Sanctum::actingAs($user);
+
+        $params = [
+            'title' => 'test custom schedule rule',
+            'description' => 'test',
+            'is_custom' => true,
+            'is_recurring' => false,
+            'custom_date_times' => [
+                ['start' => '2024-03-01 12:00:00', 'end' => '2024-03-01 13:00:00'],
+                ['start' => '2024-03-02 09:00:00', 'end' => '2024-03-02 10:00:00'],
+            ]
+        ];
+
+        // Make a POST request to the store action with the data
+        $response = $this->json('POST', '/api/schedule-rules', $params);
+        $response->assertStatus(ErrorCode::CREATED->value);
+
+        // Assert that the response contains the recurring schedule rule
+        $response->assertJsonFragment([
+            'title' => 'test custom schedule rule',
+            'description' => 'test',
+            'is_custom' => true,
+        ]);
+
+        // Assert that a schedule rule with the given title, user_id, is_custom exists in the database
+        $this->assertDatabaseHas('schedule_rules', [
+            'title' => 'test custom schedule rule',
+            'user_id' => $user->id,
+            'is_custom' => true,
+        ]);
+
+        // Assert that the CreateBookingJob was added to the queue
+        Queue::assertPushed(CreateBookingJob::class);
+    }
 }

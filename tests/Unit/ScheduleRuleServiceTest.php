@@ -317,4 +317,64 @@ class ScheduleRuleServiceTest extends TestCase
 
         $this->scheduleRuleService->generateRecurring($params);
     }
+
+    public function testCustomScheduleGeneration(): void
+    {
+        $params = [
+            'is_custom' => true,
+            'custom_date_times' => [
+                ['start' => '2024-03-01 12:00:00', 'end' => '2024-03-01 13:00:00'],
+                ['start' => '2024-03-02 09:00:00', 'end' => '2024-03-02 10:00:00'],
+            ]
+        ];
+
+        try {
+            $result = $this->scheduleRuleService->generateCustom($params);
+        } catch (Exception $e) {
+            var_dump($e->getMessage());
+        }
+
+        $this->assertNotEmpty($result);
+        $this->assertCount(2, $result);
+    }
+
+    public function testCustomScheduleGenerationMissingIsCustom(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $params = [
+            'custom_date_times' => [
+                ['start' => '2024-03-01 12:00:00', 'end' => '2024-03-01 13:00:00'],
+                ['start' => '2024-03-02 09:00:00', 'end' => '2024-03-02 10:00:00'],
+            ]
+        ];
+
+        $this->scheduleRuleService->generateCustom($params);
+    }
+
+    public function testCustomScheduleGenerationMissingCustomDateTimesArray(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $params = [
+            'is_custom' => true,
+        ];
+
+        $this->scheduleRuleService->generateCustom($params);
+    }
+
+    public function testCustomScheduleGenerationStartDate(): void
+    {
+        $this->expectException(InvalidArgumentException::class);
+
+        $params = [
+            'is_custom' => true,
+            'custom_date_times' => [
+                ['end' => '2024-03-01 13:00:00'],
+                ['start' => '2024-03-02 09:00:00', 'end' => '2024-03-02 10:00:00'],
+            ]
+        ];
+
+        $this->scheduleRuleService->generateCustom($params);
+    }
 }

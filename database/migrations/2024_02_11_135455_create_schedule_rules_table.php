@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\RecurringType;
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
@@ -20,7 +21,7 @@ return new class extends Migration
                 $table->tinyInteger('status')->default(ScheduleRuleStatus::DRAFT->value);
 
                 $table->unsignedBigInteger('user_id'); // Assuming you want to associate with users (managers)
-                $table->tinyInteger('recurring_type');
+                $table->tinyInteger('recurring_type')->default(RecurringType::NONE->value);
 
                 $table->boolean('is_recurring')->default(0);
                 $table->integer('recurring_type_duration')->default(1);
