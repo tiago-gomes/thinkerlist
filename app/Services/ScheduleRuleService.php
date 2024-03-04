@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\ErrorCode;
 use InvalidArgumentException;
 use App\Enums\RecurringType;
 use Carbon\Carbon;
@@ -232,5 +233,52 @@ class ScheduleRuleService
                 true
             )
         );
+    }
+
+    /**
+     * Generate custom date times based on provided parameters.
+     *
+     * @param array $params Parameters for generating custom date times.
+     * @return array Generated custom date times.
+     *
+     * @throws InvalidArgumentException When parameters are invalid.
+     */
+    public function generateCustom(array $params)
+    {
+        // Check if 'is_custom' parameter is set
+        if (!isset($params['is_custom'])) {
+            throw new InvalidArgumentException('is_custom must be true', ErrorCode::UNPROCESSABLE_ENTITY->value);
+        }
+
+        // Check if 'custom_date_times' parameter is set and is an array
+        if (!isset($params['custom_date_times']) || !is_array($params['custom_date_times'])) {
+            throw new InvalidArgumentException('custom_date_time must be an array', ErrorCode::UNPROCESSABLE_ENTITY->value);
+        }
+
+        $dateTimes = [];
+        // Validate each custom date time slot
+        foreach ($params['custom_date_times'] as $slot) {
+
+            // Check if 'start' and 'end' parameters are set
+            if (!isset($slot['start']) || !isset($slot['end'])) {
+                throw new InvalidArgumentException('start and end cannot be empty', ErrorCode::UNPROCESSABLE_ENTITY->value);
+            }
+
+            // Check if 'start' and 'end' parameters follow the format: Y-m-d H:i:s
+            if (!Carbon::hasFormat($slot['start'], 'Y-m-d H:i:s') || !Carbon::hasFormat($slot['end'], 'Y-m-d H:i:s')) {
+                throw new InvalidArgumentException('start and end must follow format: Y-m-d H:i:s', ErrorCode::UNPROCESSABLE_ENTITY->value);
+            }
+
+            // formate the array $datetimes
+            $date = Carbon::createFromFormat('Y-m-d H:i:s', $slot['start'])->format('Y-m-d');
+            $dateTimes[$date][] = ['start' => $slot['start'], 'end' => $slot['end']];
+        }
+
+        if(empty($dateTimes) or $dateTimes == null) {
+            throw new InvalidArgumentException('generated data is empty.', ErrorCode::UNPROCESSABLE_ENTITY->value);
+        }
+
+        // Return the generated custom date times
+        return $dateTimes;
     }
 }

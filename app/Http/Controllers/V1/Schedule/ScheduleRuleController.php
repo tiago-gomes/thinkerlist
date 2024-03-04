@@ -74,6 +74,14 @@ class ScheduleRuleController extends Controller
         $params = $request->validated();
         $user = $request->user();
 
+        // check if is_custom and is_recursive are both true
+        if (
+            isset($params['is_recurring']) && $params['is_recurring'] == true &&
+            isset($params['is_custom']) && $params['is_custom'] == true
+        ) {
+            throw new InvalidArgumentException("is_custom and is_recursive can not both be true.", ErrorCode::UNPROCESSABLE_ENTITY->value);
+        }
+
         // check if schedule rule title is a duplicate
         $duplicate = ScheduleRule::where('title', $params['title'])->first();
         if ($duplicate) {

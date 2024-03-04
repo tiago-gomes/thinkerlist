@@ -46,7 +46,9 @@ class CreateScheduleRuleRequest extends FormRequest
             'recurring_ignore_weekends' => 'sometimes|boolean',
 
             'is_custom' => 'required|boolean',
-            'custom_date_times' => 'required_if:is_custom,true|json',
+            'custom_date_times.*' => 'required_if:is_custom,true|array',
+            'custom_date_times.*.start' => 'required_if:is_custom,true|date_format:Y-m-d H:i:s',
+            'custom_date_times.*.end' => 'required_if:is_custom,true|date_format:Y-m-d H:i:s',
         ];
     }
 }

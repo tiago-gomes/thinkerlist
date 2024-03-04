@@ -10,6 +10,7 @@ use Illuminate\Queue\SerializesModels;
 use App\Models\ScheduleRule;
 use Illuminate\Support\Facades\DB;
 use App\Services\ScheduleRuleService;
+use App\Enums\ErrorCode;
 
 class CreateBookingJob implements ShouldQueue
 {
@@ -36,9 +37,26 @@ class CreateBookingJob implements ShouldQueue
     {
         try {
 
+            // throw exception because we can not generate both!
+            if (
+                isset($this->params['is_custom']) && $this->params['is_custom'] == true &&
+                isset($this->params['is_recurring']) && $this->params['is_recurring'] == true
+            ) {
+                throw new \InvalidArgumentException('Custom booking cannot be recurring', ErrorCode::UNPROCESSABLE_ENTITY->value);
+            }
+
             // generate time slots
             $scheduleRuleService = new ScheduleRuleService();
-            $dates = $scheduleRuleService->generateRecurring($this->params);
+
+            // generate recurring
+            if (isset($this->params['is_recurring']) && $this->params['is_recurring'] == true) {
+                $dates = $scheduleRuleService->generateRecurring($this->params);
+            }
+
+            // generatre custom
+            if (isset($this->params['is_custom']) && $this->params['is_custom']) {
+                $dates = $scheduleRuleService->generateCustom($this->params);
+            }
 
             // start transaction
             DB::beginTransaction();
@@ -67,6 +85,7 @@ class CreateBookingJob implements ShouldQueue
         } catch (\Exception $e) {
             // In case of failure, you can revert the changes made so far.
             DB::rollBack();
+            throw new \Exception('Error while generating new booking schedule.', ErrorCode::INTERNAL_SERVER_ERROR->value);
         }
     }
 }
