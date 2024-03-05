@@ -4,7 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class CreateScheduleRuleRequest extends FormRequest
+class ScheduleRuleRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -49,6 +49,8 @@ class CreateScheduleRuleRequest extends FormRequest
             'custom_date_times.*' => 'required_if:is_custom,true|array',
             'custom_date_times.*.start' => 'required_if:is_custom,true|date_format:Y-m-d H:i:s',
             'custom_date_times.*.end' => 'required_if:is_custom,true|date_format:Y-m-d H:i:s',
+
+            "status" => "sometimes|between:1,3",
         ];
     }
 }

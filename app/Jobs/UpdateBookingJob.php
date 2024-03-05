@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 use App\Services\ScheduleRuleService;
 use App\Enums\ErrorCode;
 
-class CreateBookingJob implements ShouldQueue
+class UpdateBookingJob implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
     private array $params;
@@ -37,6 +37,12 @@ class CreateBookingJob implements ShouldQueue
     {
         try {
 
+            // start transaction
+            DB::beginTransaction();
+
+            // delete old bookings
+            $this->scheduleRule->bookings()->delete();
+
             // throw exception because we can not generate both!
             if (
                 isset($this->params['is_custom']) && $this->params['is_custom'] == true &&
@@ -57,9 +63,6 @@ class CreateBookingJob implements ShouldQueue
             if (isset($this->params['is_custom']) && $this->params['is_custom']) {
                 $dates = $scheduleRuleService->generateCustom($this->params);
             }
-
-            // start transaction
-            DB::beginTransaction();
 
             $scheduleRule = $this->scheduleRule;
 

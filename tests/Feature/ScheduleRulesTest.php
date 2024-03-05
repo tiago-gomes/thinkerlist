@@ -9,6 +9,7 @@ use App\Models\ScheduleRule;
 use App\Enums\ErrorCode;
 use Laravel\Sanctum\Sanctum;
 use App\Jobs\CreateBookingJob;
+use App\Jobs\UpdateBookingJob;
 use InvalidArgumentException;
 use Queue;
 
@@ -312,5 +313,63 @@ class ScheduleRulesTest extends TestCase
 
         // Assert that the CreateBookingJob was added to the queue
         Queue::assertPushed(CreateBookingJob::class);
+    }
+
+    public function testEditCustomScheduleRule()
+    {
+        Queue::fake();
+
+        // generate a user
+        $user = User::factory()->create();
+
+        // Act as the authenticated user with Sanctum
+        Sanctum::actingAs($user);
+
+        $params = [
+            'title' => 'test custom schedule rule',
+            'description' => 'test',
+            'is_custom' => true,
+            'is_recurring' => false,
+            'custom_date_times' => [
+                ['start' => '2024-03-01 12:00:00', 'end' => '2024-03-01 13:00:00'],
+                ['start' => '2024-03-02 09:00:00', 'end' => '2024-03-02 10:00:00'],
+            ]
+        ];
+
+        $initialscheduleRuleParams = [
+            "user_id" => $user->id,
+            'is_recurring' => true,
+            'recurring_type' => 1, // Daily
+            'recurring_duration_start_date' => '2024-03-01',
+            'recurring_type_duration' => 5,
+            'recurring_start_time' => '09:00',
+            'recurring_end_time' => '17:00',
+            'recurring_duration_minutes' => 60,
+            'recurring_interval_minutes' => 15,
+            'recurring_ignore_weekends' => false,
+        ];
+
+        $scheduleRule = ScheduleRule::factory()->create($initialscheduleRuleParams);
+
+        // Make a POST request to the store action with the data
+        $response = $this->json('PATCH', '/api/schedule-rules/' . $scheduleRule->id, $params);
+        $response->assertStatus(ErrorCode::OK->value);
+
+        // Assert that the response contains the recurring schedule rule
+        $response->assertJsonFragment([
+            'title' => 'test custom schedule rule',
+            'description' => 'test',
+            'is_custom' => true,
+        ]);
+
+        // Assert that a schedule rule with the given title, user_id, is_custom exists in the database
+        $this->assertDatabaseHas('schedule_rules', [
+            'title' => 'test custom schedule rule',
+            'user_id' => $user->id,
+            'is_custom' => true,
+        ]);
+
+        // Assert that the UpdateBookingJob was added to the queue
+        Queue::assertPushed(UpdateBookingJob::class);
     }
 }
