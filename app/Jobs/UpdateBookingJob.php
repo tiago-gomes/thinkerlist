@@ -11,6 +11,8 @@ use App\Models\ScheduleRule;
 use Illuminate\Support\Facades\DB;
 use App\Services\ScheduleRuleService;
 use App\Enums\ErrorCode;
+use App\Enums\ScheduleRuleStatus;
+use Cache;
 
 class UpdateBookingJob implements ShouldQueue
 {
@@ -82,6 +84,11 @@ class UpdateBookingJob implements ShouldQueue
                     $scheduleRule->bookings()->createMany($chunk->toArray());
                 });
             });
+
+            // generate cache v1
+            if (isset($this->params['status']) && $this->params['status']  === ScheduleRuleStatus::LIVE->value) {
+                Cache::put('schedule_rule_'.$scheduleRule->id.'_v1', json_encode($dates), -1);
+            }
 
             // commit transaction
             DB::commit();
