@@ -4,11 +4,13 @@ namespace App\Http\Controllers\V1\Schedule;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\CreateBookingJob;
+use App\Jobs\UpdateBookingJob;
 use App\Models\ScheduleRule;
-use App\Http\Requests\CreateScheduleRuleRequest;
+use App\Http\Requests\ScheduleRuleRequest;
 use App\Http\Requests\SearchScheduleRuleRequest;
 use App\Enums\ErrorCode;
 use InvalidArgumentException;
+use Exception;
 
 class ScheduleRuleController extends Controller
 {
@@ -66,10 +68,10 @@ class ScheduleRuleController extends Controller
     /**
      * Create a new Schedule Rule
      *
-     * @param CreateScheduleRuleRequest $request
+     * @param ScheduleRuleRequest $request
      * @return void
      */
-    public function store(CreateScheduleRuleRequest $request)
+    public function store(ScheduleRuleRequest $request)
     {
         $params = $request->validated();
         $user = $request->user();
@@ -96,5 +98,39 @@ class ScheduleRuleController extends Controller
             ->onQueue('recursive-queue');
 
         return response()->json($scheduleRule, ErrorCode::CREATED->value);
+    }
+
+    public function update(ScheduleRuleRequest $request, int $schedule_rule_id)
+    {
+        // find the specific schedule rule
+        $scheduleRule = ScheduleRule::find($schedule_rule_id);
+        if (!$scheduleRule) {
+            throw new Exception("Schedule rule not found", ErrorCode::BAD_REQUEST->value);
+        }
+
+        // verify if user as access to the schedule rule
+        $user = $request->user();
+        if($user->id != $scheduleRule->user_id) {
+            throw new Exception("Unauthorized.", ErrorCode::UNAUTHORIZED->value);
+        }
+
+        // validated data
+        $params = $request->validated();
+
+        try {
+            // update new schedule rules
+            $scheduleRule->update($params);
+
+            // Execute in background
+            dispatch(new UpdateBookingJob($scheduleRule, $params))
+                ->onQueue('recursive-queue');
+        } catch (\Throwable $e) {
+            // Handle dispatching error
+            \Log::error("Failed to dispatch UpdateBookingJob: " . $e->getMessage());
+            return response()->json(['error' => 'Failed to update schedule rule: '. $e->getMessage()], ErrorCode::INTERNAL_SERVER_ERROR->value);
+        }
+
+        // Return response
+        return response()->json($scheduleRule, ErrorCode::OK->value);
     }
 }

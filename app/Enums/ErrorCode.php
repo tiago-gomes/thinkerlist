@@ -9,4 +9,5 @@ enum ErrorCode: int
     case BAD_REQUEST = 400;
     case INTERNAL_SERVER_ERROR = 500;
     case UNPROCESSABLE_ENTITY = 422;
+    case NOT_FOUND = 404;
 }

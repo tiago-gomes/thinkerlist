@@ -38,7 +38,7 @@ return new class extends Migration
                 $table->time('recurring_end_lunch_time')->nullable();
 
                 $table->boolean('recurring_has_weekdays')->default(0);
-                $table->json('recurring_weekdays')->default(json_encode(["monday","tuesday","wednesday","thursday","friday"]));
+                $table->json('recurring_weekdays')->default(json_encode([]));
 
                 $table->boolean('recurring_ignore_weekends')->default(1);
 

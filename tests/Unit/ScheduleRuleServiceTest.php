@@ -35,7 +35,7 @@ class ScheduleRuleServiceTest extends TestCase
         $params = [
             'is_recurring' => true,
             'recurring_type' => 1, // Daily
-            'recurring_duration_start_date' => '2024-03-01',
+            'recurring_duration_start_date' => '2024-10-01',
             'recurring_type_duration' => 5,
             'recurring_start_time' => '09:00',
             'recurring_end_time' => '17:00',
