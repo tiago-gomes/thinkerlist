@@ -1,70 +1,129 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Episodes Management System
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+This system manages episodes, parts within episodes, and logs operations performed on parts. Below is the structure and functionality provided by the system.
 
-## About Laravel
+## Database Structure
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+### Episodes Table
+| Column      | Type       | Description            |
+|-------------|------------|------------------------|
+| id          | INT (PK)   | Unique episode ID.      |
+| name        | VARCHAR    | Name of the episode.    |
+| created_at  | TIMESTAMP  | Creation time.          |
+| updated_at  | TIMESTAMP  | Last update time.       |
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+### Parts Table
+| Column      | Type       | Description                             |
+|-------------|------------|-----------------------------------------|
+| id          | INT (PK)   | Unique part ID.                         |
+| episode_id  | INT (FK)   | Foreign key linking to episodes.        |
+| position    | INT        | Position of the part in the episode.    |
+| created_at  | TIMESTAMP  | Creation time.                          |
+| updated_at  | TIMESTAMP  | Last update time.                       |
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### Operation Logs Table
+Logs the operations (add, delete, update) performed on the parts.
 
-## Learning Laravel
+| Column      | Type       | Description                                        |
+|-------------|------------|----------------------------------------------------|
+| id          | INT (PK)   | Unique log ID.                                     |
+| operation   | VARCHAR    | Type of operation ('add', 'delete', 'update').     |
+| episode_id  | INT (FK)   | Foreign key linking to episodes.                   |
+| part_id     | INT (FK)   | Foreign key linking to parts.                      |
+| position    | INT        | Current Position.                                  |
+| timestamp   | TIMESTAMP  | Time the operation was performed.                  |
+| status      | INT        | Status of the operation ('pending', 'completed').  |
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## API Endpoints
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 1. Update Episode Position
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+**Endpoint**: `PATCH /episode`
 
-## Contributing
+**Payload**:
+```json
+{
+  "episode": 1,
+  "part": 2,
+  "position": 3
+}
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## 2. Add New Part to Episode
 
-## Code of Conduct
+**Endpoint**: `POST /episode/{id}/parts`
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### Payload
 
-## Security Vulnerabilities
+```json
+{
+  "content": "New part content",
+  "position": 0
+}
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+## Actions
 
-## License
+- Validate the input data.
+- Insert the new part into the `parts` table.
+- Add a log entry to the `operation_logs` table.
+- Create a queue job to:
+  - Process in batches of 500:
+    - Update the Redis cache for parts (v1 and v2).
+    - Reindex positions in MySQL.
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## Tests
 
-## Create new folders.
-mkdir /docker/mysql/
+### Unit Tests
+- Verify the part is added correctly in the database.
+- Ensure the correct log entry is created in `operation_logs`.
 
-mkdir /docker/redis
+### Integration Tests
+- Verify that the Redis cache updates appropriately.
+- Ensure positions are recalculated correctly in MySQL.
 
-## Install
-docker-compose up -d --build
+---
 
-## File Permissions
-docker-compose exec app chmod -R 775 storage
+## 3. Delete Part from Episode
 
-docker-compose exec app chown -R www-data:www-data storage
+**Endpoint**: `DELETE /episode/{episodeId}/parts/{partId}`
 
-## Generate new laravel key
-docker-compose exec app php artisan key:generate
+### Actions
+- Validate the part and episode IDs.
+- Log the delete operation in the `operation_logs` table.
+- Create a queue job to:
+  - Process in batches of 500:
+    - Update the Redis cache for parts (v1 and v2).
+    - Reindex positions in MySQL.
 
-## run composer
-docker-compose run --rm composer <package>
+### Tests
 
-## Whats under the hood
-[Link to folder1 README](folder1/README.md)
+#### Unit Tests
+- Confirm the specified part is deleted from the database.
+- Ensure the correct log entry is created in `operation_logs`.
 
-## 
+#### Integration Tests
+- Verify the Redis cache is updated correctly.
+- Validate that the positions of remaining parts are recalculated in MySQL.
+
+---
+
+## 4. Fetch Episode Parts
+
+**Endpoint**: `GET /episode/{id}/parts`
+
+### Actions
+- Retrieve the list of parts from Redis cache, if available.
+- If not present in the cache, fetch from the `parts` table and store the result in Redis for future requests.
+
+### Tests
+
+#### Unit Tests
+- Ensure the endpoint returns the correct list of parts for a given episode.
+- Validate that data is fetched correctly from either Redis or MySQL.
+
+#### Integration Tests
+- Verify the caching mechanism for performance and accuracy.
+- Ensure subsequent requests are served from Redis.
+- Confirm that the cache is updated correctly when new parts are added or deleted.
+- Validate that the cache is cleared when the episode is updated or deleted.
+- Test edge cases, such as an empty episode or a non-existent episode.
+

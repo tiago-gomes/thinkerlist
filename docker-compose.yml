@@ -1,19 +1,18 @@
 version: '3'
 
 services:
-  # PHP Service
   app:
     build:
       context: ./docker/app
       dockerfile: Dockerfile
-    container_name: laravel-app
+    container_name: thinkerlist-app
     restart: always
     volumes:
       - .:/var/www/html
     environment:
       - PHP_FPM_LARAVEL=true
     networks:
-      - laravel-net
+      - thinkerlist-net
     depends_on:
       - db
       - redis
@@ -21,7 +20,7 @@ services:
   # Nginx Service
   web:
     image: nginx:alpine
-    container_name: laravel-nginx
+    container_name: thinkerlist-nginx
     restart: always
     ports:
       - "8080:80"
@@ -31,12 +30,12 @@ services:
     depends_on:
       - app
     networks:
-      - laravel-net
+      - thinkerlist-net
 
   # MySQL Service
   db:
     image: woahbase/alpine-mysql
-    container_name: laravel-mysql
+    container_name: thinkerlist-mysql
     restart: always
     environment:
       MYSQL_ROOT_PWD: ${DB_ROOT_PASSWORD}
@@ -46,26 +45,26 @@ services:
     volumes:
       - ./docker/mysql:/var/lib/mysql
     networks:
-      - laravel-net
+      - thinkerlist-net
     ports:
       - "3306:3306"
 
   # Redis Service
   redis:
     image: redis:alpine
-    container_name: laravel-redis
+    container_name: thinkerlist-redis
     restart: always
     command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
     volumes:
       - ./docker/redis/config/redis.conf:/usr/local/etc/redis/redis.conf
       - ./docker/redis/data:/data
     networks:
-      - laravel-net
+      - thinkerlist-net
     ports:
       - "6379:6379"
 
 networks:
-  laravel-net:
+  thinkerlist-net:
     driver: bridge
 
 volumes:
