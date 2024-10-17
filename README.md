@@ -47,6 +47,7 @@ Logs the operations (add, delete, update) performed on the parts.
   "part": 2,
   "position": 3
 }
+```
 
 ## 2. Add New Part to Episode
 
@@ -59,6 +60,7 @@ Logs the operations (add, delete, update) performed on the parts.
   "content": "New part content",
   "position": 0
 }
+```
 
 ## Actions
 
