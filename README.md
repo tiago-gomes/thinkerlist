@@ -1,4 +1,4 @@
-# Episodes Management System
+# Episodes Management System (wip)
 
 This system manages episodes, parts within episodes, and logs operations performed on parts. Below is the structure and functionality provided by the system.
 
