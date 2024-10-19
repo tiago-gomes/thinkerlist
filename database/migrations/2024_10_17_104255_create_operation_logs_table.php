@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('operation_logs', function (Blueprint $table) {
             $table->id(); // Unique log ID
             $table->string('operation'); // Type of operation ('add', 'delete', 'update')
-            $table->foreignId('episode_id')->constrained()->onDelete('cascade'); // Foreign key linking to episodes
-            $table->foreignId('part_id')->constrained()->onDelete('cascade'); // Foreign key linking to parts
-            $table->integer('position'); // Current position
+            $table->foreignId('episode_id')->index()->constrained()->onDelete('cascade'); // Foreign key linking to episodes
+            $table->foreignId('part_id')->index()->constrained()->onDelete('cascade'); // Foreign key linking to parts
+            $table->integer('position')->index(); // Current position
             $table->timestamp('timestamp'); // Time the operation was performed
             $table->tinyInteger('status'); // Status of the operation ('pending', 'completed')
             $table->timestamps(); // Created at and updated at timestamps

@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('parts', function (Blueprint $table) {
             $table->id(); // This will create an auto-incrementing ID as the primary key
             $table->foreignId('episode_id')->constrained()->onDelete('cascade'); // Foreign key linking to episodes
-            $table->integer('position'); // Position of the part in the episode
+            $table->integer('position')->index(); // Position of the part in the episode
             $table->timestamps(); // This will create created_at and updated_at timestamps
+
         });
     }
 
