@@ -34,16 +34,17 @@ services:
 
   # MySQL Service
   db:
-    image: woahbase/alpine-mysql
+    image: mysql
     container_name: thinkerlist-mysql
     restart: always
+    command: "--innodb_use_native_aio=0 --wait_timeout=28800"
     environment:
-      MYSQL_ROOT_PWD: ${DB_ROOT_PASSWORD}
-      MYSQL_USER_DB: ${DB_DATABASE}
-      MYSQL_USER: ${DB_USERNAME}
-      MYSQL_USER_PWD: ${DB_PASSWORD}
+        MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+        MYSQL_DATABASE: ${DB_DATABASE}
+        MYSQL_USER: ${DB_USERNAME}
+        MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
-      - ./docker/mysql:/var/lib/mysql
+      - ./docker/data:/var/lib/mysql
     networks:
       - thinkerlist-net
     ports:
