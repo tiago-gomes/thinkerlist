@@ -1,3 +1,4 @@
+/docker/data/*
 /docker/mysql/*
 /docker/redis/*
 /.phpunit.cache
