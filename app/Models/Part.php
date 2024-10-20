@@ -7,6 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Part extends Model
 {
+    use HasFactory;
+
     // Define the table associated with the model
     protected $table = 'parts'; // If your table name is not plural
 

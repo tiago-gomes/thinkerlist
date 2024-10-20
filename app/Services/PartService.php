@@ -3,14 +3,17 @@
 namespace App\Services;
 
 use App\Services\Contract\PartServiceInterface;
+use App\Jobs\UpdateEpisodeCacheJob;
 use App\Models\Episode;
 use App\Models\Part;
 use Exception;
-use Illuminate\Support\Collection;
+use Cache;
 use DB;
 
 class PartService implements PartServiceInterface
 {
+    const CACHE_MINUTES = 1;
+
     public function validate(array $item)
     {
         if (!isset($item['episode_id']) || !is_numeric($item['episode_id'])) {
@@ -41,14 +44,6 @@ class PartService implements PartServiceInterface
             ->exists();
     }
 
-    public function getEpisodeParts(array $item): Collection
-    {
-        // Retrieve all parts for a specific episode
-        return Part::where('episode_id', $item['episode_id'])
-            ->orderBy('position')
-            ->get();
-    }
-
     public function create(array $item): Part
     {
         if (!isset($item['episode_id']) || !is_numeric($item['episode_id'])) {
@@ -70,7 +65,12 @@ class PartService implements PartServiceInterface
         }
 
         // Create a new part if none exists
-        return Part::create($item);
+        $part =  Part::create($item);
+
+        // update the cache
+        $this->updateEpisodeCache($item['episode_id']);
+
+        return $part;
     }
 
     public function update(array $item, int $newPositionId): Part
@@ -99,9 +99,14 @@ class PartService implements PartServiceInterface
         $this->reIndex($item, $newPositionId);
 
         // Return the updated part
-        return Part::where('episode_id', $item['episode_id'])
+        $updated =  Part::where('episode_id', $item['episode_id'])
             ->where('position', $newPositionId)
             ->first();
+
+        // update the cache
+        $this->updateEpisodeCache($item['episode_id']);
+
+        return $updated;
     }
 
     public function delete(array $item): bool
@@ -109,9 +114,14 @@ class PartService implements PartServiceInterface
         $this->validate($item);
 
         // Attempt to delete the part and return success or failure
-        return Part::where('episode_id', $item['episode_id'])
+        $delete = Part::where('episode_id', $item['episode_id'])
             ->where('position', $item['position'])
             ->delete();
+
+        // update the cache
+        $this->updateEpisodeCache($item['episode_id']);
+
+        return $delete;
     }
 
     public function reIndex(array $item, int $newPositionId): void
@@ -149,5 +159,47 @@ class PartService implements PartServiceInterface
 
         // Update the part being moved to the new position
         $partBeingMoved->update(['position' => $newPositionId]);
+
+        // update the cache
+        $this->updateEpisodeCache($item['episode_id']);
+    }
+
+    public function getEpisodeParts(int $episode): mixed
+    {
+        $cacheKeyV1 = "episode:{$episode}:parts:v1";
+        $cacheKeyV2 = "episode:{$episode}:parts:v2";
+
+        // Check if v1 cache is missing but v2 exists, return v2
+        if (!Cache::has($cacheKeyV1) && Cache::has($cacheKeyV2)) {
+            return Cache::get($cacheKeyV2);
+        }
+
+        // If both v1 and v2 are missing, update the cache
+        return $this->updateEpisodeCache($episode);
+    }
+
+    public function updateEpisodeCache(int $episode): mixed
+    {
+        $cacheKeyV1 = "episode:{$episode}:parts:v1";
+        $cacheKeyV2 = "episode:{$episode}:parts:v2";
+
+        // Dispatch the job to update the cache asynchronously
+        UpdateEpisodeCacheJob::dispatch($episode);
+
+        // Check if v2 cache is available
+        if (Cache::has($cacheKeyV2)) {
+            return Cache::get($cacheKeyV2);
+        }
+
+        // Check if v1 cache is available
+        if (Cache::has($cacheKeyV1)) {
+            return Cache::get($cacheKeyV1);
+        }
+
+        // If not in cache, fetch directly from the database as a fallback
+        return Part::where('episode_id', $episode)
+            ->orderBy('position')
+            ->get()
+            ->toArray();
     }
 }
