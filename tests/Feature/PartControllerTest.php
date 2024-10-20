@@ -7,6 +7,7 @@ use App\Models\Part;
 use App\Services\PartService;
 use App\Models\Episode;
 use Tests\TestCase;
+use Illuminate\Http\Response;
 
 class PartControllerTest extends TestCase
 {
@@ -67,5 +68,55 @@ class PartControllerTest extends TestCase
         // Assert: Check the response
         $response->assertStatus(200);
         $response->assertJson([]); // Should return an empty array
+    }
+
+    public function test_create_part_success()
+    {
+        // Create a sample episode
+        $episode = Episode::factory()->create();
+
+        $data = [
+            'episode_id' => $episode->id,
+            'position' => 1,
+        ];
+
+        $response = $this->json('POST', '/api/episodes/parts', $data);
+
+        $response->assertStatus(200)
+            ->assertJsonStructure(['data' => ['id', 'episode_id', 'position']]);
+
+        $this->assertDatabaseHas('parts', [
+            'episode_id' => $episode->id,
+            'id' => 1,
+            'position' => 1,
+        ]);
+    }
+
+    public function test_create_part_validation_failures()
+    {
+        // Test required fields
+        $response = $this->json('POST', '/api/episodes/parts', []);
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        // Test invalid episode_id
+        $response = $this->json('POST', '/api/episodes/parts', [
+            'episode_id' => 999, // Non-existent ID
+            'part_id' => 1,
+            'position' => 1,
+        ]);
+        $response->assertStatus(Response::HTTP_UNPROCESSABLE_ENTITY);
+
+        // Test non-unique position for existing episode
+        $existingEpisode = Episode::factory()->create();
+        Part::factory()->create([
+            'episode_id' => $existingEpisode->id,
+            'position' => 1,
+        ]);
+
+        $response = $this->json('POST', '/api/episodes/parts', [
+            'episode_id' => $existingEpisode->id,
+            'position' => 1,
+        ]);
+        $response->assertStatus(Response::HTTP_INTERNAL_SERVER_ERROR);
     }
 }

@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PartCreateRequest;
 use App\Models\Episode;
 use App\Services\PartService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class PartController extends Controller
@@ -15,7 +17,7 @@ class PartController extends Controller
         $this->partService = $partService;
     }
 
-    public function getAllParts(int $episodeId, Request $request)
+    public function getAllParts(int $episodeId, Request $request): JsonResponse
     {
         $episode = $this->partService->checkIfEpisodeExists($episodeId);
         if (!$episode) {
@@ -24,6 +26,15 @@ class PartController extends Controller
 
         return response()->json([
             "data" => $this->partService->getEpisodeParts($episodeId)
+        ],
+        200
+        );
+    }
+
+    public function create(PartCreateRequest $request): JsonResponse
+    {
+        return response()->json([
+            "data" => $this->partService->create($request->validated())
         ],
         200
         );
