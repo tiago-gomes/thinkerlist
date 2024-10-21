@@ -46,137 +46,124 @@ class PartService implements PartServiceInterface
 
     public function create(array $item): Part
     {
-        if (!isset($item['episode_id']) || !is_numeric($item['episode_id'])) {
-            throw new Exception('Episode ID is required', 412);
+        DB::beginTransaction();
+
+        try {
+            if (!isset($item['episode_id']) || !is_numeric($item['episode_id'])) {
+                throw new Exception('Episode ID is required', 412);
+            }
+
+            if (!isset($item['position']) || !is_numeric($item['position'])) {
+                throw new Exception('position is required', 412);
+            }
+
+            $existingEpisode = $this->checkIfEpisodeExists($item['episode_id']);
+            if (!$existingEpisode) {
+                throw new Exception('Episode ID does not exist', 404);
+            }
+
+            $existingPosition = $this->checkIfPositionExists($item);
+            if ($existingPosition) {
+                throw new Exception('Position already exists', 404);
+            }
+
+            // Create a new part if none exists
+            $part =  Part::create($item);
+
+            // Update the cache
+            $this->updateEpisodeCache($item['episode_id']);
+
+            // Commit the transaction
+            DB::commit();
+
+            return $part;
+        } catch (Exception $e) {
+            // Rollback the transaction in case of error
+            DB::rollBack();
+            throw $e;
         }
-
-        if (!isset($item['position']) || !is_numeric($item['position'])) {
-            throw new Exception('position is required', 412);
-        }
-
-        $existingEpisode = $this->checkIfEpisodeExists($item['episode_id']);
-        if (!$existingEpisode) {
-            throw new Exception('Episode ID does not exist', 404);
-        }
-
-        $existingPosition = $this->checkIfPositionExists($item);
-        if ($existingPosition) {
-            throw new Exception('Position already exists', 404);
-        }
-
-        // Create a new part if none exists
-        $part =  Part::create($item);
-
-        // update the cache
-        $this->updateEpisodeCache($item['episode_id']);
-
-        return $part;
     }
+
 
     public function update(array $item, int $newPositionId): Part
     {
-        $this->validate($item);
+        DB::beginTransaction();
 
-        $existingEpisode = $this->checkIfEpisodeExists($item['episode_id']);
-        if (!$existingEpisode) {
-            throw new Exception('Episode ID does not exist', 404);
+        try {
+
+            $this->validate($item);
+
+            $existingEpisode = $this->checkIfEpisodeExists($item['episode_id']);
+            if (!$existingEpisode) {
+                throw new Exception('Episode ID does not exist', 404);
+            }
+
+            // Check if a part already exists at the new position
+            $existingPart = Part::where('episode_id', $item['episode_id'])
+                ->where('id', $item['part_id'])
+                ->where('position', $newPositionId)
+                ->first();
+
+            // If no part exists at the new position, create it
+            if (!$existingPart) {
+                $newPart = $this->create(
+                    array_merge($item, ["position" => $newPositionId])
+                );
+                DB::commit();
+                return $newPart;
+            }
+
+            // Reindex if part exists at new position
+            $this->reIndex($item, $newPositionId);
+
+            // Return the updated part
+            $updated =  Part::where('episode_id', $item['episode_id'])
+                ->where('position', $newPositionId)
+                ->first();
+
+            // Update the cache
+            $this->updateEpisodeCache($item['episode_id']);
+
+            // Commit the transaction
+            DB::commit();
+
+            return $updated;
+        } catch (Exception $e) {
+            // Rollback the transaction in case of error
+            DB::rollBack();
+            throw $e;
         }
-
-        // Check if a part already exists at the new position
-        $existingPart = Part::where('episode_id', $item['episode_id'])
-            ->where('id', $item['part_id'])
-            ->where('position', $newPositionId)
-            ->first();
-
-        // If no part exists at the new position, create it
-        if (!$existingPart) {
-            return $this->create(
-                array_merge($item, ["position" => $newPositionId])
-            );
-        }
-
-        // Reindex if part exists at new position
-        $this->reIndex($item, $newPositionId);
-
-        // Return the updated part
-        $updated =  Part::where('episode_id', $item['episode_id'])
-            ->where('position', $newPositionId)
-            ->first();
-
-        // update the cache
-        $this->updateEpisodeCache($item['episode_id']);
-
-        return $updated;
     }
 
-    public function delete(array $item): bool
+        public function delete(array $item): bool
     {
-        $this->validate($item);
+        DB::beginTransaction();
 
-        // Attempt to delete the part and return success or failure
-        $delete = Part::where('episode_id', $item['episode_id'])
-            ->where('id', $item['part_id'])
-            ->where('position', $item['position'])
-            ->delete();
+        try {
+            $this->validate($item);
 
-        // update the cache
-        $this->updateEpisodeCache($item['episode_id']);
+            // Attempt to delete the part and return success or failure
+            $delete = Part::where('episode_id', $item['episode_id'])
+                ->where('id', $item['part_id'])
+                ->where('position', $item['position'])
+                ->delete();
 
-        return $delete;
-    }
+            if (!$delete) {
+                throw new Exception('Failed to delete the part', 500);
+            }
 
-    public function reIndex(array $item, int $newPositionId): void
-    {
-        $this->validate($item);
+            // Update the cache
+            $this->updateEpisodeCache($item['episode_id']);
 
-        // Find the part that is being moved
-        $partBeingMoved = Part::where('episode_id', $item['episode_id'])
-            ->where("id", $item['part_id'])
-            ->where('position', $item['position'])
-            ->first();
+            // Commit the transaction
+            DB::commit();
 
-        if (!$partBeingMoved) {
-            throw new Exception('The part being moved does not exist.');
+            return $delete;
+        } catch (Exception $e) {
+            // Rollback the transaction in case of error
+            DB::rollBack();
+            throw $e;
         }
-
-        // Determine if the part is being moved up or down
-        $currentPosition = $item['position'];
-
-        if ($currentPosition < $newPositionId) {
-            // Moving the part down: decrement positions of parts between current and new position
-            DB::table('parts')
-                ->where('episode_id', $item['episode_id'])
-                ->where('position', '>', $currentPosition)
-                ->where('position', '<=', $newPositionId)
-                ->decrement('position');
-        } elseif ($currentPosition > $newPositionId) {
-            // Moving the part up: increment positions of parts between new and current position
-            DB::table('parts')
-                ->where('episode_id', $item['episode_id'])
-                ->where('position', '<', $currentPosition)
-                ->where('position', '>=', $newPositionId)
-                ->increment('position');
-        }
-
-        // Update the part being moved to the new position
-        $partBeingMoved->update(['position' => $newPositionId]);
-
-        // update the cache
-        $this->updateEpisodeCache($item['episode_id']);
-    }
-
-    public function getEpisodeParts(int $episode): mixed
-    {
-        $cacheKeyV1 = "episode:{$episode}:parts:v1";
-        $cacheKeyV2 = "episode:{$episode}:parts:v2";
-
-        // Check if v1 cache is missing but v2 exists, return v2
-        if (!Cache::has($cacheKeyV1) && Cache::has($cacheKeyV2)) {
-            return Cache::get($cacheKeyV2);
-        }
-
-        // If both v1 and v2 are missing, update the cache
-        return $this->updateEpisodeCache($episode);
     }
 
     public function updateEpisodeCache(int $episode): mixed
