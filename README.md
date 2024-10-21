@@ -1,6 +1,25 @@
 # Episodes Management System (wip)
 
-This system manages episodes, parts within episodes, and logs operations performed on parts. Below is the structure and functionality provided by the system.
+This system manages episodes and the parts within them. It provides functionality for creating, updating, deleting, and reindexing parts within episodes, with enhanced data integrity through the use of pessimistic locking. The system ensures that episodes and parts are locked during modifications to prevent concurrent updates or race conditions.
+
+Below is the structure and functionality provided by the system:
+
+## Episode Management: 
+
+- Verifies the existence of episodes before any operation involving parts.
+
+## Part Management: 
+
+- Handles the creation, updating, deletion, and reindexing of parts within episodes. The system uses pessimistic locking to ensure that parts are not modified by other transactions during these operations.
+
+## Cache Updates: 
+
+- Episode caches are updated automatically after any change in parts.
+
+## Pessimistic Locking: 
+
+- Ensures that rows are locked when creating, updating, deleting, or reindexing parts to prevent conflicts and guarantee data consistency.
+
 
 ## Database Structure
 
@@ -21,90 +40,66 @@ This system manages episodes, parts within episodes, and logs operations perform
 | created_at  | TIMESTAMP  | Creation time.                          |
 | updated_at  | TIMESTAMP  | Last update time.                       |
 
-### Operation Logs Table
-Logs the operations (add, delete, update) performed on the parts.
-
-| Column      | Type       | Description                                        |
-|-------------|------------|----------------------------------------------------|
-| id          | INT (PK)   | Unique log ID.                                     |
-| operation   | VARCHAR    | Type of operation ('add', 'delete', 'update').     |
-| episode_id  | INT (FK)   | Foreign key linking to episodes.                   |
-| part_id     | INT (FK)   | Foreign key linking to parts.                      |
-| position    | INT        | Current Position.                                  |
-| timestamp   | TIMESTAMP  | Time the operation was performed.                  |
-| status      | INT        | Status of the operation ('pending', 'completed').  |
-
 ## API Endpoints
 
 ### 1. Update Episode Position
 
-**Endpoint**: `PATCH /episode`
+**Endpoint**: `PATCH  /episodes/parts`
 
 **Payload**:
 ```json
 {
-  "episode": 1,
-  "part": 2,
-  "position": 3
+
 }
 ```
 
 ## 2. Add New Part to Episode
 
-**Endpoint**: `POST /episode/{id}/parts`
+**Endpoint**: `POST /episodes/parts`
 
 ### Payload
 
 ```json
 {
-  "content": "New part content",
-  "position": 0
+
 }
 ```
 
 ## Actions
 
 - Validate the input data.
-- Insert the new part into the `parts` table.
-- Add a log entry to the `operation_logs` table.
-- Create a queue job to:
-  - Process in batches of 500:
-    - Update the Redis cache for parts (v1 and v2).
-    - Reindex positions in MySQL.
 
 ## Tests
 
 ### Unit Tests
-- Verify the part is added correctly in the database.
-- Ensure the correct log entry is created in `operation_logs`.
 
 ### Integration Tests
-- Verify that the Redis cache updates appropriately.
-- Ensure positions are recalculated correctly in MySQL.
 
 ---
 
 ## 3. Delete Part from Episode
 
-**Endpoint**: `DELETE /episode/{episodeId}/parts/{partId}`
+**Endpoint**: `DELETE /episodes/parts`
+
+### Payload
+
+```json
+{
+
+}
+```
 
 ### Actions
+
 - Validate the part and episode IDs.
-- Log the delete operation in the `operation_logs` table.
-- Create a queue job to:
-  - Process in batches of 500:
-    - Update the Redis cache for parts (v1 and v2).
-    - Reindex positions in MySQL.
+
 
 ### Tests
 
 #### Unit Tests
-- Confirm the specified part is deleted from the database.
-- Ensure the correct log entry is created in `operation_logs`.
 
 #### Integration Tests
-- Verify the Redis cache is updated correctly.
-- Validate that the positions of remaining parts are recalculated in MySQL.
+
 
 ---
 
@@ -112,20 +107,19 @@ Logs the operations (add, delete, update) performed on the parts.
 
 **Endpoint**: `GET /episode/{id}/parts`
 
+### Payload
+
+```json
+{
+
+}
+```
+
 ### Actions
 - Retrieve the list of parts from Redis cache, if available.
-- If not present in the cache, fetch from the `parts` table and store the result in Redis for future requests.
 
 ### Tests
 
 #### Unit Tests
-- Ensure the endpoint returns the correct list of parts for a given episode.
-- Validate that data is fetched correctly from either Redis or MySQL.
 
 #### Integration Tests
-- Verify the caching mechanism for performance and accuracy.
-- Ensure subsequent requests are served from Redis.
-- Confirm that the cache is updated correctly when new parts are added or deleted.
-- Validate that the cache is cleared when the episode is updated or deleted.
-- Test edge cases, such as an empty episode or a non-existent episode.
-
