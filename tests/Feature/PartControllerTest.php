@@ -8,6 +8,9 @@ use App\Services\PartService;
 use App\Models\Episode;
 use Tests\TestCase;
 use Illuminate\Http\Response;
+use App\Http\Controllers\PartController;
+use App\Http\Requests\PartDeleteRequest;
+
 
 class PartControllerTest extends TestCase
 {
@@ -22,7 +25,7 @@ class PartControllerTest extends TestCase
         $this->partService = $this->app->make(PartService::class);
     }
 
-    public function testGetAllPartsReturns200JsonResponse()
+    public function test_get_all_parts_returns_200_json_response()
     {
         $episodeId = 1;
 
@@ -41,7 +44,7 @@ class PartControllerTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function testGetAllPartsReturns404ForNonExistentEpisode()
+    public function test_get_all_parts_returns_404_for_non_existent_episode()
     {
         // Arrange: Define a non-existent episode ID
         $nonExistentEpisodeId = 999;
@@ -53,7 +56,7 @@ class PartControllerTest extends TestCase
         $response->assertStatus(404); // Adjust according to your episode existence check
     }
 
-    public function testGetAllPartsReturnsEmptyArrayForEpisodeWithNoParts()
+    public function test_get_all_parts_returns_empty_array_for_episode_with_no_parts()
     {
         $episodeId = 2;
 
@@ -118,5 +121,48 @@ class PartControllerTest extends TestCase
             'position' => 1,
         ]);
         $response->assertStatus(Response::HTTP_INTERNAL_SERVER_ERROR);
+    }
+
+    public function test_delete_part_success()
+    {
+        // Arrange: Create an episode and a part
+        $episode = Episode::factory()->create();
+        $part = Part::factory()->create([
+            'episode_id' => $episode->id,
+            'position' => 1,
+        ]);
+
+        // Prepare the request data
+        $requestData = [
+            'part_id' => $part->id,
+            'episode_id' => $episode->id,
+            'position' => 1,
+        ];
+
+        // Act: Send delete request
+        $response = $this->deleteJson(route('parts.delete'), $requestData);
+
+        // Assert: Ensure the response is successful
+        $response->assertStatus(200)
+                 ->assertJson(['message' => 'Part deleted successfully']);
+
+        // Assert: Check if part is deleted from the database
+        $this->assertDatabaseMissing('parts', ['id' => $part->id]);
+    }
+
+    public function test_delete_returns_not_found_when_episode_does_not_exist()
+    {
+        // Prepare the request data
+        $requestData = [
+            'part_id' => 1,
+            'episode_id' => 999999,
+            'position' => 1,
+        ];
+
+        // Act: Send delete request
+        $response = $this->deleteJson(route('parts.delete'), $requestData);
+
+        // Assert: Ensure the response is 422
+        $response->assertStatus(422);
     }
 }

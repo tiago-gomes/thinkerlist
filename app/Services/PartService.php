@@ -115,6 +115,7 @@ class PartService implements PartServiceInterface
 
         // Attempt to delete the part and return success or failure
         $delete = Part::where('episode_id', $item['episode_id'])
+            ->where('id', $item['part_id'])
             ->where('position', $item['position'])
             ->delete();
 
