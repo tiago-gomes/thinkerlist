@@ -101,6 +101,7 @@ class PartService implements PartServiceInterface
             $existingPart = Part::where('episode_id', $item['episode_id'])
                 ->where('id', $item['part_id'])
                 ->where('position', $newPositionId)
+                ->lockForUpdate()
                 ->first();
 
             // If no part exists at the new position, create it
@@ -118,6 +119,7 @@ class PartService implements PartServiceInterface
             // Return the updated part
             $updated =  Part::where('episode_id', $item['episode_id'])
                 ->where('position', $newPositionId)
+                ->lockForUpdate()
                 ->first();
 
             // Update the cache
@@ -145,6 +147,7 @@ class PartService implements PartServiceInterface
             $delete = Part::where('episode_id', $item['episode_id'])
                 ->where('id', $item['part_id'])
                 ->where('position', $item['position'])
+                ->lockForUpdate()
                 ->delete();
 
             if (!$delete) {
@@ -177,6 +180,7 @@ class PartService implements PartServiceInterface
             $partBeingMoved = Part::where('episode_id', $item['episode_id'])
                 ->where("id", $item['part_id'])
                 ->where('position', $item['position'])
+                ->lockForUpdate()
                 ->first();
 
             if (!$partBeingMoved) {
@@ -192,6 +196,7 @@ class PartService implements PartServiceInterface
                     ->where('episode_id', $item['episode_id'])
                     ->where('position', '>', $currentPosition)
                     ->where('position', '<=', $newPositionId)
+                    ->lockForUpdate()
                     ->decrement('position');
             } elseif ($currentPosition > $newPositionId) {
                 // Moving the part up: increment positions of parts between new and current position
@@ -199,6 +204,7 @@ class PartService implements PartServiceInterface
                     ->where('episode_id', $item['episode_id'])
                     ->where('position', '<', $currentPosition)
                     ->where('position', '>=', $newPositionId)
+                    ->lockForUpdate()
                     ->increment('position');
             }
 

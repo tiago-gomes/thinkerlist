@@ -54,6 +54,15 @@ class PartController extends Controller
         );
     }
 
+    public function duplicate(int $episode, Request $request): JsonResponse
+    {
+        return response()->json([
+            "data" => $this->partService->duplicateEpisode($episode)
+        ],
+        200
+        );
+    }
+
     public function delete(PartDeleteRequest $request)
     {
         $item = $request->validated();

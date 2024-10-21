@@ -15,3 +15,6 @@ Route::delete('/episodes/parts', [PartController::class, 'delete'])
 
 Route::patch('/episodes/parts', [PartController::class, 'update'])
     ->name('parts.update');
+
+Route::post('/episodes/{episodeId}', [PartController::class, 'duplicateEpisode'])
+    ->name('parts.duplicateEpisode');
