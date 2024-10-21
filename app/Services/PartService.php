@@ -84,7 +84,6 @@ class PartService implements PartServiceInterface
         }
     }
 
-
     public function update(array $item, int $newPositionId): Part
     {
         DB::beginTransaction();
@@ -135,7 +134,7 @@ class PartService implements PartServiceInterface
         }
     }
 
-        public function delete(array $item): bool
+    public function delete(array $item): bool
     {
         DB::beginTransaction();
 
@@ -166,6 +165,56 @@ class PartService implements PartServiceInterface
         }
     }
 
+    public function reIndex(array $item, int $newPositionId): void
+    {
+        $this->validate($item);
+
+        DB::beginTransaction();
+
+        try {
+
+            // Find the part that is being moved
+            $partBeingMoved = Part::where('episode_id', $item['episode_id'])
+                ->where("id", $item['part_id'])
+                ->where('position', $item['position'])
+                ->first();
+
+            if (!$partBeingMoved) {
+                throw new Exception('The part being moved does not exist.');
+            }
+
+            // Determine if the part is being moved up or down
+            $currentPosition = $item['position'];
+
+            if ($currentPosition < $newPositionId) {
+                // Moving the part down: decrement positions of parts between current and new position
+                DB::table('parts')
+                    ->where('episode_id', $item['episode_id'])
+                    ->where('position', '>', $currentPosition)
+                    ->where('position', '<=', $newPositionId)
+                    ->decrement('position');
+            } elseif ($currentPosition > $newPositionId) {
+                // Moving the part up: increment positions of parts between new and current position
+                DB::table('parts')
+                    ->where('episode_id', $item['episode_id'])
+                    ->where('position', '<', $currentPosition)
+                    ->where('position', '>=', $newPositionId)
+                    ->increment('position');
+            }
+
+            // Update the part being moved to the new position
+            $partBeingMoved->update(['position' => $newPositionId]);
+
+            // update the cache
+            $this->updateEpisodeCache($item['episode_id']);
+
+            DB::commit();
+        } catch (Exception $e) {
+            DB::rollBack(); // Roll back changes on error
+            throw $e; // Re-throw the exception if needed
+        }
+    }
+
     public function updateEpisodeCache(int $episode): mixed
     {
         $cacheKeyV1 = "episode:{$episode}:parts:v1";
@@ -189,5 +238,53 @@ class PartService implements PartServiceInterface
             ->orderBy('position')
             ->get()
             ->toArray();
+    }
+
+    public function getEpisodeParts(int $episode): mixed
+    {
+        $cacheKeyV1 = "episode:{$episode}:parts:v1";
+        $cacheKeyV2 = "episode:{$episode}:parts:v2";
+
+        // Check if v1 cache is missing but v2 exists, return v2
+        if (!Cache::has($cacheKeyV1) && Cache::has($cacheKeyV2)) {
+            return Cache::get($cacheKeyV2);
+        }
+
+        // If both v1 and v2 are missing, update the cache
+        return $this->updateEpisodeCache($episode);
+    }
+
+    public function duplicateEpisode(int $episodeId): Episode
+    {
+
+        DB::beginTransaction();
+
+        try {
+
+            $originalEpisode = $this->checkIfEpisodeExists( $episodeId);
+            if (!$originalEpisode) {
+                throw new Exception('Episode ID does not exist', 404);
+            }
+
+            $originalEpisode = Episode::find($episodeId);
+
+            // Duplicate the episode
+            $newEpisode = $originalEpisode->replicate();
+            $newEpisode->save();
+
+            // Duplicate related parts
+            foreach ($originalEpisode->parts as $part) {
+                $newPart = $part->replicate();
+                $newPart->position =  $part->position; // Assign the new position ID
+                $newPart->episode_id = $newEpisode->id; // Assign the new episode ID
+                $newPart->save();
+            }
+
+            return $newEpisode;
+
+        } catch (Exception $e) {
+            DB::rollBack(); // Roll back changes on error
+            throw $e; // Re-throw the exception if needed
+        }
     }
 }

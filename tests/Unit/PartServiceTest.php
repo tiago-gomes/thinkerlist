@@ -203,4 +203,29 @@ class PartServiceTest extends TestCase
 
         $this->assertEquals(3,$movedPart->position); // The part should now be at position 3
     }
+
+    public function test_duplicate_episode_success()
+    {
+        $partService = new PartService();
+
+        // Create a sample episode with parts
+        $originalEpisode = Episode::create(['name' => 'Original Episode']);
+        $part1 = Part::create(['episode_id' => $originalEpisode->id, 'position' => 1]);
+        $part2 = Part::create(['episode_id' => $originalEpisode->id, 'position' => 2]);
+
+        // Duplicate the episode
+        $newEpisode = $partService->duplicateEpisode($originalEpisode->id);
+
+        // Assert that the new episode was created
+        $this->assertNotNull($newEpisode);
+        $this->assertNotEquals($originalEpisode->id, $newEpisode->id);
+        $this->assertEquals('Original Episode', $newEpisode->name);
+
+        // Assert that the related parts were duplicated
+        $this->assertCount(2, Part::where('episode_id', $newEpisode->id)->get());
+        $this->assertEquals(1, Part::where('episode_id', $newEpisode->id)->first()->position);
+        $this->assertEquals(2, Part::where('episode_id', $newEpisode->id)->latest()->get()->last()->position);
+    }
+
+
 }
