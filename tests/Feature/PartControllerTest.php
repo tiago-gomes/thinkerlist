@@ -8,9 +8,6 @@ use App\Services\PartService;
 use App\Models\Episode;
 use Tests\TestCase;
 use Illuminate\Http\Response;
-use App\Http\Controllers\PartController;
-use App\Http\Requests\PartDeleteRequest;
-
 
 class PartControllerTest extends TestCase
 {
