@@ -16,7 +16,6 @@ return new class extends Migration
             $table->foreignId('episode_id')->constrained()->onDelete('cascade'); // Foreign key linking to episodes
             $table->integer('position')->index(); // Position of the part in the episode
             $table->timestamps(); // This will create created_at and updated_at timestamps
-
         });
     }
 
