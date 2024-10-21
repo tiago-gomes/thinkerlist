@@ -162,4 +162,29 @@ class PartControllerTest extends TestCase
         // Assert: Ensure the response is 422
         $response->assertStatus(422);
     }
+
+    public function test_update_part_successfully()
+    {
+        // Arrange: Create an episode and part in the database
+        $episode = Episode::factory()->create();
+        $part = Part::factory()->create([
+            'episode_id' => $episode->id,
+            'position' => 1
+        ]);
+
+        // Data to update the part
+        $data = [
+            'episode_id' => $episode->id,
+            'part_id' => $part->id,
+            'position' => 1,
+            'new_position' => 2,
+        ];
+
+        // Act: Perform the update
+        $response = $this->patchJson(route('parts.update'),$data);
+
+        // Assert: Check the response
+        $response->assertStatus(200)
+            ->assertJsonStructure(['data']);
+    }
 }

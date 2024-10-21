@@ -12,3 +12,6 @@ Route::post('/episodes/parts', [PartController::class, 'create'])
 
 Route::delete('/episodes/parts', [PartController::class, 'delete'])
     ->name('parts.delete');
+
+Route::patch('/episodes/parts', [PartController::class, 'update'])
+    ->name('parts.update');

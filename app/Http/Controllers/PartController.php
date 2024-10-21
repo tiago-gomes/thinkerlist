@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PartCreateRequest;
+use App\Http\Requests\PartUpdateRequest;
 use App\Http\Requests\PartDeleteRequest;
 use App\Models\Episode;
 use App\Services\PartService;
@@ -36,6 +37,18 @@ class PartController extends Controller
     {
         return response()->json([
             "data" => $this->partService->create($request->validated())
+        ],
+        200
+        );
+    }
+
+    public function update(PartUpdateRequest $request): JsonResponse
+    {
+        $data       = $request->validated();
+        $position   = $data['new_position'];
+
+        return response()->json([
+            "data" => $this->partService->update($data, $position)
         ],
         200
         );

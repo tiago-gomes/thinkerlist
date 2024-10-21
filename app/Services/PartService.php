@@ -84,7 +84,7 @@ class PartService implements PartServiceInterface
 
         // Check if a part already exists at the new position
         $existingPart = Part::where('episode_id', $item['episode_id'])
-            ->where('part_id', $item['part_id'])
+            ->where('id', $item['part_id'])
             ->where('position', $newPositionId)
             ->first();
 
