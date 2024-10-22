@@ -1,4 +1,4 @@
-# Episodes Management System (wip)
+# Episodes Management System 
 
 This system manages episodes and the parts within them. It provides functionality for creating, updating, deleting, and reindexing parts within episodes, with enhanced data integrity through the use of pessimistic locking. The system ensures that episodes and parts are locked during modifications to prevent concurrent updates or race conditions.
 
