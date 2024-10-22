@@ -49,7 +49,10 @@ Below is the structure and functionality provided by the system:
 **Payload**:
 ```json
 {
-
+    'part_id' : 1
+    'episode_id' :2,
+    'position' : 1,
+    'new_position' : 3,
 }
 ```
 
@@ -61,21 +64,10 @@ Below is the structure and functionality provided by the system:
 
 ```json
 {
-
+    'episode_id' :2,
+    'position' : 1,
 }
 ```
-
-## Actions
-
-- Validate the input data.
-
-## Tests
-
-### Unit Tests
-
-### Integration Tests
-
----
 
 ## 3. Delete Part from Episode
 
@@ -85,41 +77,16 @@ Below is the structure and functionality provided by the system:
 
 ```json
 {
-
+    'part_id' : 1
+    'episode_id' :2,
+    'position' : 1,
 }
 ```
-
-### Actions
-
-- Validate the part and episode IDs.
-
-
-### Tests
-
-#### Unit Tests
-
-#### Integration Tests
-
-
----
 
 ## 4. Fetch Episode Parts
 
 **Endpoint**: `GET /episode/{id}/parts`
 
-### Payload
+### 5. duplicate episode
 
-```json
-{
-
-}
-```
-
-### Actions
-- Retrieve the list of parts from Redis cache, if available.
-
-### Tests
-
-#### Unit Tests
-
-#### Integration Tests
+**Endpoint**: `POST  /episodes/{episodeId}`
