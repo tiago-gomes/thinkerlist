@@ -1,8 +1,9 @@
 <!-- Badges -->
 ![Docker Support](https://img.shields.io/badge/Docker-Support-orange.svg)
-![repo size](https://img.shields.io/github/repo-size/tiago-gomes/thinkerlist/)
-![GitHub commit activity](https://img.shields.io/github/commit-activity/m/tiago-gomes/thinkerlist/)
-[Laravel](https://img.shields.io/badge/Laravel-2e2e2e?logo=laravel)
+![repo size](https://img.shields.io/github/repo-size/tiago-gomes/thinkerlist)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/tiago-gomes/thinkerlist)
+
+![Laravel](https://img.shields.io/badge/laravel-%23FF2D20.svg?style=for-the-badge&logo=laravel&logoColor=white)
 
 # Episodes Management System 
 
