@@ -1,3 +1,9 @@
+<!-- Badges -->
+![Docker Support](https://img.shields.io/badge/Docker-Support-orange.svg)
+![repo size](https://img.shields.io/github/repo-size/tiago-gomes/thinkerlist/)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/tiago-gomes/thinkerlist/)
+[Laravel](https://img.shields.io/badge/Laravel-2e2e2e?logo=laravel)
+
 # Episodes Management System 
 
 This system manages episodes and the parts within them. It provides functionality for creating, updating, deleting, and reindexing parts within episodes, with enhanced data integrity through the use of pessimistic locking. The system ensures that episodes and parts are locked during modifications to prevent concurrent updates or race conditions.
